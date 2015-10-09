@@ -2,12 +2,9 @@
 
 ###BVN Validation node module###
 
-
-
-
 ### How do I get set up? ###
 
-
+git clone git@bitbucket.org:kvpafrica/bvn-validator.git bvn
 
 ### Contribution guidelines ###
 
