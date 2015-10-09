@@ -1,6 +1,6 @@
 # README #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+BVN Validation node module
 
 ### What is this repository for? ###
 
