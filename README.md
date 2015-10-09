@@ -1,18 +1,13 @@
 # README #
 
-BVN Validation node module
+###BVN Validation node module###
 
 
 
 
 ### How do I get set up? ###
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+
 
 ### Contribution guidelines ###
 
