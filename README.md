@@ -3,7 +3,7 @@
 *To install:* 
 
 ```sh
-$git clone git+ssh://git@bitbucket.org:kvpafrica/nibssssm.git bvn
+$ git clone git+ssh://git@bitbucket.org:kvpafrica/nibssssm.git bvn
 ```
 
 ## Generate Key Pairs
@@ -21,8 +21,7 @@ bvn.generateKey("username","password")
 
 ## Validate a BVN
 
-> You will pass a json object to the bvn validateBVN function.
-> eg : 
+> You will pass a json object to the bvn validateBVN function. eg : 
 
 ```javascript
 
@@ -42,5 +41,16 @@ bvn.validateBVN(inputDataObject)
 });
 ```
 
+>Output format:
+
+```javascript
+
+{ ValidationResponse:
+   { RequestStatus: [ '00' ],
+     BVN: [ '33333333333' ],
+     Validity: [ 'INVALID' ]
+ } 
+}
+```
 
 *Note: Always generate a key on first use.*
