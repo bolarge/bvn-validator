@@ -2,13 +2,8 @@
 
 BVN Validation node module
 
-### What is this repository for? ###
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
 
-Validate a BVN.
 
 ### How do I get set up? ###
 
