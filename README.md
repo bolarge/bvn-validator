@@ -8,37 +8,44 @@ $ git clone git+ssh://git@bitbucket.org:kvpafrica/nibssssm.git bvn
 
 ## Generate Key Pairs
 
+> To generate a key pair, post a username and password to the api. eg
+
 ```javascript
-bvn.generateKey("username","password")
-.then(function(res){
-    // Result
-},function(err){
-    // Error
-});
+{"usernsname" : "name"'
+ "password" : "password"
+}
+
+to
+/oapi/generateKeys
+
 ```
 
 > You can get your generated private and public keys in "node_modules/nibssSSM/keys/" Folder
 
 ## Validate a BVN
 
-> You will pass a json object to the bvn validateBVN function. eg : 
+> To validate a BVN, post a json object to the api. eg : 
 
 ```javascript
 
-var inputDataObject = {
-  BVN : "33333333333",
-  FirstName : "Damilola",
-  LastName : "Foo",
-  PhoneNumber : "08098776765",
-  DateOfBirth : "29-OCT-1977"
-};
+Post
 
-bvn.validateBVN(inputDataObject)
-.then(function(res){
-    // Result
-},function(err){
-    // Error
-});
+{
+  "inputDataObject" :
+    {
+  "BVN" : "33333333333",
+  "FirstName" : "Damilola",
+  "LastName" : "Foo",
+  "PhoneNumber" : "08098776765",
+  "DateOfBirth" : "29-OCT-1977"
+    }
+    
+}
+
+to 
+
+/oapi/bvnValidation
+
 ```
 
 >Output format:
