@@ -1,18 +1,46 @@
-# README #
+# BVN validation node package
 
-###BVN Validation node module###
+*To install:* 
 
-### How do I get set up? ###
+```sh
+$git clone git+ssh://git@bitbucket.org:kvpafrica/nibssssm.git bvn
+```
 
-git clone git@bitbucket.org:kvpafrica/bvn-validator.git bvn
+## Generate Key Pairs
 
-### Contribution guidelines ###
+```javascript
+bvn.generateKey("username","password")
+.then(function(res){
+    // Result
+},function(err){
+    // Error
+});
+```
 
-* Writing tests
-* Code review
-* Other guidelines
+> You can get your generated private and public keys in "node_modules/nibssSSM/keys/" Folder
 
-### Who do I talk to? ###
+## Validate a BVN
 
-* Repo owner or admin
-* Other community or team contact
+> You will pass a json object to the bvn validateBVN function.
+> eg : 
+
+```javascript
+
+var inputDataObject = {
+  BVN : "33333333333",
+  FirstName : "Damilola",
+  LastName : "Foo",
+  PhoneNumber : "08098776765",
+  DateOfBirth : "29-OCT-1977"
+};
+
+bvn.validateBVN(inputDataObject)
+.then(function(res){
+    // Result
+},function(err){
+    // Error
+});
+```
+
+
+*Note: Always generate a key on first use.*
