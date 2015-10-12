@@ -18,7 +18,6 @@ var config = {
 host : "http://196.6.103.100/BVNValidationBooleanMatch/bvnValidation?wsdl"
            };
 
-
 var inputDataObject = {};
 
 var args = {
