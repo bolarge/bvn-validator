@@ -6,25 +6,17 @@
 var Module = require('meanio').Module;
 
 var Bvn = new Module('bvn');
+var BasicStrategy = require('passport-http').BasicStrategy;
+var mongoose = require('mongoose');
 
 /*
  * All MEAN packages require registration
  * Dependency injection is used to define required modules
  */
-Bvn.register(function(app, auth, database) {
+Bvn.register(function(app, auth, database, passport) {
 
   //We enable routing. By default the Package Object is passed to the routes
-  Bvn.routes(app, auth, database);
-
-  //We are adding a link to the main menu for all authenticated users
-  Bvn.menus.add({
-    title: 'bvn example page',
-    link: 'bvn example page',
-    roles: ['authenticated'],
-    menu: 'main'
-  });
-  
-  Bvn.aggregateAsset('css', 'bvn.css');
+  Bvn.routes(app, auth, database, passport);
 
   /**
     //Uncomment to use. Requires meanio@0.3.7 or above

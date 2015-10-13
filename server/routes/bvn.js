@@ -8,18 +8,15 @@ var soap = require('soap');
 var ssm = require("nibssSSM");
 var js2xml = require("js2xmlparser");
 var debug = require("debug")("tracker");
+var parseString = require('xml2js').parseString;
 var checker = require("debug")("xml");
-var config = { 
-                host: "http://196.6.103.58:8080/BVNValidationBooleanMatch/bvnValidation?wsdl"
-           };
 
-var inputDataObject = {
-  BVN : "33333333333",
-  FirstName : "Damilola",
-  LastName : "Foo",
-  PhoneNumber : "08098776765",
-  DateOfBirth : "29-OCT-1977"
-};
+
+var config = { 
+     /*           host: "http://196.6.103.58:8080/BVNValidationBooleanMatch/bvnValidation?wsdl"
+ */
+host : "http://196.6.103.100/BVNValidationBooleanMatch/bvnValidation?wsdl"
+           };
 
 var args = {
                 requestXML : '',
@@ -44,18 +41,18 @@ var nibss =  path.resolve(__dirname,"../","../") + "/node_modules/nibssSSM/keys/
 /**
  * * Simply generate the keys to be used
  * */
-module.exports.generateKey = function(username,password){
+ function generateKey(username,password){
   var deferred = Q.defer();
-  ssm.generateKey(username, password)
+  ssm.generateKey(username,password)
   .then(function(res){
     deferred.resolve(res);
   });
 
   return deferred.promise;
-};
+}
 
 
-module.exports.validateBVN = function(inputDataObject){
+ function validateBVN(inputDataObject){
 
   var deferred = Q.defer();
 
@@ -78,12 +75,14 @@ module.exports.validateBVN = function(inputDataObject){
       soapClient.verifySingleBVN(args,  function(err, soapResp){
 
         if(err)  deferred.reject(err);
-
+          
         ssm.decrypt(soapResp.ValidationResponse, password, base)
         .then(function(res){
-
+      
+        //console.log(res);    
         parseString(res, function (err, result) {
-            deferred.resolve(result);
+              
+              deferred.resolve(result);
         });
 
         },function(err){
@@ -96,6 +95,31 @@ module.exports.validateBVN = function(inputDataObject){
   });
 
   return deferred.promise;
-};
+}
 
-module.exports = function(Nimbss, app, auth, database) {};
+module.exports = function(Nimbss, app, auth, database, passport) {
+  
+
+   app.post("/oapi/bvnValidation", 
+    passport.authenticate('basic', { session: false }),
+    function(req, res, next){
+      
+      inputDataObject = req.body.inputDataObject;
+
+      validateBVN(inputDataObject)
+       .then(function(re){ res.send(re);});
+
+   });
+
+
+    app.post("/oapi/generateKeys", 
+      passport.authenticate('basic', { session: false }),
+      function(req, res, next){
+                                   
+      password = req.body.password;
+
+      generateKey(req.body.username, req.body.password)
+           .then(function(re){ res.send(re);});
+
+   });
+};
