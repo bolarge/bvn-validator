@@ -106,7 +106,7 @@ module.exports = function(Nimbss, app, auth, database, passport) {
     passport.authenticate('basic', { session: false }),
     function(req, res, next){
       
-      inputDataObject = req.body.inputDataObject;
+      var inputDataObject = req.body.inputDataObject;
 
       validateBVN(inputDataObject)
        .then(function(re){ res.send(re);},function(err){
