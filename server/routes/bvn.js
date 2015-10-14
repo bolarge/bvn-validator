@@ -46,7 +46,9 @@ var nibss =  path.resolve(__dirname,"../","../") + "/node_modules/nibssSSM/keys/
   ssm.generateKey(username,password)
   .then(function(res){
     deferred.resolve(res);
-  });
+  },function(err){
+deferred.reject(err);
+});
 
   return deferred.promise;
 }
@@ -59,8 +61,8 @@ var nibss =  path.resolve(__dirname,"../","../") + "/node_modules/nibssSSM/keys/
   var thexml = js2xml("ValidationRequest",inputDataObject);
 
   ssm.encrypt(thexml, nibss)
-  .then(function(res){ args.requestXML = res; })
   .then(function(res){
+	args.requestXML = res;
     var options = {
        ignoredNamespaces: {
          namespaces: ['xsi'],
@@ -107,7 +109,9 @@ module.exports = function(Nimbss, app, auth, database, passport) {
       inputDataObject = req.body.inputDataObject;
 
       validateBVN(inputDataObject)
-       .then(function(re){ res.send(re);});
+       .then(function(re){ res.send(re);},function(err){
+	res.status(500).send(err);
+});
 
    });
 
@@ -119,7 +123,9 @@ module.exports = function(Nimbss, app, auth, database, passport) {
       password = req.body.password;
 
       generateKey(req.body.username, req.body.password)
-           .then(function(re){ res.send(re);});
+           .then(function(re){ res.send(re);},function(err){
+res.status(500).send(err);
+});
 
    });
 };
