@@ -1,3 +1,4 @@
+The BVN validation service is provided by Nibss
 # BVN validation node package
 
 *To install:* 
