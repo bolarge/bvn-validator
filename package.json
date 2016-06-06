@@ -6,16 +6,29 @@
     "name": "mean scaffold"
   },
   "mean": "0.5.5",
-  "engines": {
-    "node": "0.10.x",
-    "npm": "1.4.x"
-  },
   "dependencies": {
+    "body-parser": "~1.14.1",
     "debug": "^2.2.0",
+    "express": "^4.13.4",
+    "gingerbread": "~0.4.0",
     "js2xmlparser": "^1.0.0",
+    "json-2-csv": "^2.0.3",
+    "json2csv": "^2.12.0",
+    "lenddo": "^1.6.1",
+    "lodash": "^3.10.1",
+    "method-override": "^2.3.5",
+    "moment": "^2.10.6",
+    "mongoose-paginate": "^4.2.0",
     "nibssSSM": "git+ssh://git@bitbucket.org:kvpafrica/nibssssm.git",
+    "node-rest-client": "~1.5.1",
+    "node-validator": "^0.1.15",
     "passport-http": "^0.3.0",
-    "soap": "^0.9.4",
+    "q": "^1.4.1",
+    "request": "latest",
+    "rollbar": "^0.5.13",
+    "similarity": "~1.0.2",
+    "soap": "^0.9.5",
+    "teacher": "0.0.1",
     "xml2js": "^0.4.12"
   },
   "license": "MIT"
