@@ -23,3 +23,7 @@ module.exports.nibss = {
   wsdlUrl: process.env.NIBSS_WSDL_URL || 'http://196.6.103.100/BVNValidationBooleanMatch/bvnValidation?wsdl'
 };
 
+
+module.exports.authentication = {
+  salt: 8
+};

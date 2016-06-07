@@ -1,63 +1,63 @@
+/**
+ * Created by taiwo on 6/6/16.
+ */
 'use strict';
 
-/*
- * Defining the Package
- */
-var Module = require('meanio').Module;
+var express = require('express'),
+  app = express(),
+  bodyParser = require('body-parser'),
+  methodOverride = require('method-override'),
+  mongoose = require('mongoose'),
+  passport = require('passport'),
+  config = require('./config')
+  ;
 
-var Bvn = new Module('bvn');
-var BasicStrategy = require('passport-http').BasicStrategy;
-var mongoose = require('mongoose');
 
-/*
- * All MEAN packages require registration
- * Dependency injection is used to define required modules
- */
-Bvn.register(function (app, auth, database, passport) {
+var worker = require('debug')('worker');
 
-  var User = mongoose.model('User');
+mongoose.connect(config.db.url);
 
-  passport.use(new BasicStrategy(
-    function (username, password, done) {
-      User.findOne({username: username}, function (err, user) {
-        if (err) {
-          return done(err);
-        }
-        if (!user) {
-          return done(null, false);
-        }
-        if (!user.authenticate(password)) {
-          return done(null, false);
-        }
-        return done(null, user);
-      });
-    }
-  ));
+// set our port
+var port = process.env.PORT || 3000;
 
-  //We enable routing. By default the Package Object is passed to the routes
-  Bvn.routes(app, auth, database, passport);
+// connect to our mongoDB database
+// (uncomment after you enter in your own credentials in config/db.js)
+//mongoose.connect(db.url);
 
-  /**
-   //Uncomment to use. Requires meanio@0.3.7 or above
-   // Save settings with callback
-   // Use this for saving data from administration pages
-   Bvn.settings({
-        'someSetting': 'some value'
-    }, function(err, settings) {
-        //you now have the settings object
-    });
+app.use(bodyParser.json());
 
-   // Another save settings example this time with no callback
-   // This writes over the last settings.
-   Bvn.settings({
-        'anotherSettings': 'some value'
-    });
+// parse application/vnd.api+json as json
+app.use(bodyParser.json({type: 'application/vnd.api+json'}));
 
-   // Get settings. Retrieves latest saved settigns
-   Bvn.settings(function(err, settings) {
-        //you now have the settings object
-    });
-   */
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({extended: true}));
 
-  return Bvn;
+// override with the X-HTTP-Method-Override header in the request. simulate DELETE/PUT
+app.use(methodOverride('X-HTTP-Method-Override'));
+
+app.use(express.static(__dirname + '/public'));
+
+app.use(function (req, res, next) {
+  console.log('PATH ', req.path, new Date());
+  next();
 });
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With, Authorization");
+  next();
+
+});
+
+
+app.use(passport.initialize({}));
+app.use(passport.session());
+
+require('./server').init(app);
+
+app.listen(port);
+
+// shoutout to the user
+console.log('Serving on port ' + port);
+// expose app
+module.exports = app;
