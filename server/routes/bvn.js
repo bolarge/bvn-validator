@@ -11,5 +11,16 @@ module.exports = function (app) {
     require('passport').authenticate('basic', {session: false}),
     BvnController.validate
   );
-  
+
+
+  app.post("/oapi/validate",
+    require('passport').authenticate('basic', {session: false}),
+    BvnController.validateBoolean
+  );
+
+
+  app.get("/oapi/validate",
+    require('passport').authenticate('basic', {session: false}),
+    BvnController.validateBoolean
+  );
 };

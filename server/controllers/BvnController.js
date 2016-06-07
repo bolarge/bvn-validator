@@ -9,7 +9,8 @@ var Q = require("q"),
   debug = require("debug")("bvn"),
   parseString = require('xml2js').parseString,
   config = require('../../config'),
-  ResultCache = require('../models/ResultCache')
+  ResultCache = require('../models/ResultCache'),
+  _ = require('lodash')
   ;
 
 
@@ -116,6 +117,20 @@ var validateRequest = function (request) {
   return true;
 };
 
+
+var parseResult = function (res) {
+  var resp = res.ValidationResponse,
+    validity = resp && Array.isArray(resp.Validity) && resp.Validity.length > 0 ? resp.Validity[0] : null;
+
+  var reason = "BVN ";
+  reason += (validity || " check failed");
+
+  return {
+    valid: resp && resp.RequestStatus == "00" && validity && validity === 'VALID',
+    reason: reason
+  };
+};
+
 module.exports.validate = function (req, res) {
 
   var inputDataObject = req.body.inputDataObject || {};
@@ -134,4 +149,27 @@ module.exports.validate = function (req, res) {
       res.status(500)
         .send(err);
     });
-}
+};
+
+
+module.exports.validateBoolean = function (req, res) {
+  var input = _.merge({}, req.query, req.body || {});
+
+  var validate = validateRequest(input);
+
+  if (validate !== true) {
+    return res.status(400)
+      .json({
+        "error": validate
+      })
+  }
+
+  performBvnMatch(input)
+    .then(function (result) {
+      res.json(parseResult(result))
+    }, function (err) {
+      res.status(500)
+        .send(err);
+    });
+
+};
