@@ -36,15 +36,21 @@ function callBvnService(inputDataObject) {
         timeout: 15000
       };
 
-      //uncomment to test locally
-      // setTimeout(function () {
-      //   deferred.resolve({
-      //     valid: true,
-      //     status: 'yes'
-      //   });
-      // }, 3000);
-      //
-      // return;
+      if (process.env.SIMULATE_RESPONSE) {
+        setTimeout(function () {
+          var dummy = {
+            ValidationResponse: {
+              RequestStatus: ['00'],
+              BVN: [inputDataObject.BVN],
+              Validity: [Math.floor(Math.random() * 3000) % 2 ? 'INVALID' : 'VALID']
+            }
+          };
+
+          deferred.resolve(dummy);
+        }, 3000);
+
+        return;
+      }
 
       soap.createClient(config.nibss.wsdlUrl, options, function (err, soapClient) {
 
