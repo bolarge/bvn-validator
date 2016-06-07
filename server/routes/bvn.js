@@ -5,62 +5,27 @@ var path = require('path');
 var express = require('express');
 var Q = require("q");
 var soap = require('soap');
-var ssm = require("nibssSSM");
-var js2xml = require("js2xmlparser");
+var ssm = require("../lib/ssm");
+var js2Xml = require("js2xmlparser");
 var debug = require("debug")("tracker");
-var parseString = require('xml2js').parseString;
-var checker = require("debug")("xml");
-
-
-var config = {
-  /*           host: "http://196.6.103.58:8080/BVNValidationBooleanMatch/bvnValidation?wsdl"
-   */
-  host: "http://196.6.103.100/BVNValidationBooleanMatch/bvnValidation?wsdl"
-};
+var parseString = require('xml2js').parseString,
+  passport = require('passport'),
+  config = require('../../config')
+  ;
 
 var args = {
   requestXML: '',
-  organisationCode: "002002"
+  organisationCode: config.nibss.organisationCode
 };
-
-var username = "nimbss4real";
-var password = "great55&&31L990";
-
-
-var base = path.resolve(__dirname, "../", "../") + "/node_modules/nibssSSM/keys/public.key";
-
-var nibss = path.resolve(__dirname, "../", "../") + "/node_modules/nibssSSM/keys/nibss.key";
-
-var wsdlOptions = {
-  attribut: 'verifySingleBVN',
-  valueKey: 'http://bmatch.bvn.nibss.com/',
-  xmlKey: 'verifySingleBVN'
-};
-
-
-/**
- * * Simply generate the keys to be used
- * */
-function generateKey(username, password) {
-  var deferred = Q.defer();
-  ssm.generateKey(username, password)
-    .then(function (res) {
-      deferred.resolve(res);
-    }, function (err) {
-      deferred.reject(err);
-    });
-
-  return deferred.promise;
-}
 
 
 function validateBVN(inputDataObject) {
 
   var deferred = Q.defer();
 
-  var thexml = js2xml("ValidationRequest", inputDataObject);
+  var xmlRequest = js2Xml("ValidationRequest", inputDataObject);
 
-  ssm.encrypt(thexml, nibss)
+  ssm.encrypt(xmlRequest, config.ssm.nibssKeyPath)
     .then(function (res) {
       args.requestXML = res;
       var options = {
@@ -70,14 +35,14 @@ function validateBVN(inputDataObject) {
         }
       };
 
-      soap.createClient(config.host, options, function (err, soapClient) {
+      soap.createClient(config.nibss.wsdlUrl, options, function (err, soapClient) {
 
         if (err)  deferred.reject(err);
 
         soapClient.verifySingleBVN(args, function (err, soapResp) {
 
           if (err)  deferred.reject(err);
-          ssm.decrypt(soapResp.ValidationResponse, password, base)
+          ssm.decrypt(soapResp.ValidationResponse, config.ssm.password, config.ssm.privateKeyPath)
             .then(function (res) {
               //console.log(res);
               parseString(res, function (err, result) {
@@ -94,12 +59,12 @@ function validateBVN(inputDataObject) {
   return deferred.promise;
 }
 
-module.exports = function (app, passport) {
+module.exports = function (app) {
 
 
   app.post("/oapi/bvnValidation",
-    //passport.authenticate('basic', {session: false}),
-    function (req, res, next) {
+    passport.authenticate('basic', {session: false}),
+    function (req, res) {
 
       var inputDataObject = req.body.inputDataObject;
 
@@ -109,23 +74,5 @@ module.exports = function (app, passport) {
         }, function (err) {
           res.status(500).send(err);
         });
-
-    });
-
-
-  app.post("/oapi/generateKeys",
-    //passport.authenticate('basic', {session: false}),
-    function (req, res, next) {
-
-      password = req.body.password;
-
-      console.log("Body: ", req.body);
-      generateKey(req.body.username, req.body.password)
-        .then(function (re) {
-          res.send(re);
-        }, function (err) {
-          res.status(500).send(err);
-        });
-
     });
 };

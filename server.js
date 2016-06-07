@@ -7,7 +7,9 @@ var express = require('express'),
   app = express(),
   bodyParser = require('body-parser'),
   methodOverride = require('method-override'),
-  mongoose = require('mongoose')
+  mongoose = require('mongoose'),
+  passport = require('passport')
+  ;
 
 
 var worker = require('debug')('worker');
@@ -48,25 +50,20 @@ app.use(function(req, res, next) {
 
 
 
-// var BasicStrategy = require('passport-http').BasicStrategy;
-//
-// passport.use(new BasicStrategy(
-//   function (username, password, done) {
-//     User.findOne({username: username}, function (err, user) {
-//       if (err) {
-//         return done(err);
-//       }
-//       if (!user) {
-//         return done(null, false);
-//       }
-//       if (!user.authenticate(password)) {
-//         return done(null, false);
-//       }
-//       return done(null, user);
-//     });
-//   }
-// ));
+var BasicStrategy = require('passport-http').BasicStrategy;
 
+passport.use(new BasicStrategy(
+  function (username, password, done) {
+    if(username == 'taiwo' && password =='taiwo'){
+      return done(null, {name: 'taiwo'});
+    } else {
+      return done(null, false);
+    }
+  }
+));
+
+app.use(passport.initialize({}));
+app.use(passport.session());
 
 require('./server/routes/bvn')(app);
 

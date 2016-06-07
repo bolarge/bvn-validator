@@ -12,8 +12,9 @@ $ git clone git+ssh://git@bitbucket.org:kvpafrica/nibssssm.git bvn
 > To generate a key pair, post a username and password to the api. eg
 
 ```javascript
-{"usernsname" : "name"'
- "password" : "password"
+{
+  "username" : "name",
+  "password" : "password"
 }
 
 to
@@ -28,17 +29,14 @@ to
 > To validate a BVN, post a json object to the api. eg : 
 
 ```javascript
-
-Post
-
 {
-  "inputDataObject" :
+  "inputDataObject":
     {
-  "BVN" : "33333333333",
-  "FirstName" : "Damilola",
-  "LastName" : "Foo",
-  "PhoneNumber" : "08098776765",
-  "DateOfBirth" : "29-OCT-1977"
+      "BVN" : "33333333333",
+      "FirstName" : "Damilola",
+      "LastName" : "Foo",
+      "PhoneNumber" : "08098776765",
+      "DateOfBirth" : "29-OCT-1977"
     }
     
 }
