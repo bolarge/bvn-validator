@@ -2,6 +2,8 @@
  * Created by taiwo on 6/7/16.
  */
 
+"use strict";
+
 var Q = require("q"),
   soap = require('soap'),
   ssm = require("../lib/ssm"),
@@ -13,8 +15,13 @@ var Q = require("q"),
   _ = require('lodash')
   ;
 
-var soapClient;
-
+var soapClient,
+  options = {
+    ignoredNamespaces: {
+      namespaces: ['xsi'],
+      override: true
+    }
+  };
 
 debug('Creating soap client...');
 if (!process.env.SIMULATE_RESPONSE) {
