@@ -34,8 +34,6 @@ var ApiUser = mongoose.model('ApiUser', apiUserSchema);
 
 ApiUser.prototype.checkPassword = function (password) {
   debug('Comparing passwords');
-  //var hashed = bcrypt.hashSync(password, config.authentication.salt);
-
   return bcrypt.compareSync(password, this.password);
 };
 

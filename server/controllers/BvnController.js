@@ -2,6 +2,8 @@
  * Created by taiwo on 6/7/16.
  */
 
+"use strict";
+
 var Q = require("q"),
   soap = require('soap'),
   ssm = require("../lib/ssm"),
@@ -12,6 +14,27 @@ var Q = require("q"),
   ResultCache = require('../models/ResultCache'),
   _ = require('lodash')
   ;
+
+var soapClient,
+  options = {
+    ignoredNamespaces: {
+      namespaces: ['xsi'],
+      override: true
+    }
+  };
+
+debug('Creating soap client...');
+if (!process.env.SIMULATE_RESPONSE) {
+  soap.createClient(config.nibss.wsdlUrl, options, function (err, client) {
+
+    if (err) {
+      console.error('Could not initialize Soap Client!');
+      throw err;
+    }
+    debug('Soap client intialization completed!');
+    soapClient = client;
+  });
+}
 
 
 function callBvnService(inputDataObject) {
@@ -25,16 +48,15 @@ function callBvnService(inputDataObject) {
 
   var xmlRequest = js2Xml("ValidationRequest", inputDataObject);
 
+  if (!soapClient) {
+    throw new Error('Soap client is still initializing');
+  }
+
+  debug('Encrypting request...');
   ssm.encrypt(xmlRequest, config.ssm.nibssKeyPath)
     .then(function (res) {
       args.requestXML = res;
-      var options = {
-        ignoredNamespaces: {
-          namespaces: ['xsi'],
-          override: true
-        },
-        timeout: 15000
-      };
+      debug('Request has been encrypted');
 
       if (process.env.SIMULATE_RESPONSE) {
         setTimeout(function () {
@@ -52,27 +74,30 @@ function callBvnService(inputDataObject) {
         return;
       }
 
-      soap.createClient(config.nibss.wsdlUrl, options, function (err, soapClient) {
+      var timeStart = Date.now();
+      debug('Starting verify request...');
+      soapClient.verifySingleBVN(args, function (err, soapResp) {
+        debug('Verify request completed after:' + (Date.now() - timeStart) + "ms");
 
         if (err) {
-          return deferred.reject(err)
+          return deferred.reject(err);
         }
 
-        soapClient.verifySingleBVN(args, function (err, soapResp) {
+        if (!soapResp) {
+          return deferred.reject(new Error("Empty response returned from Validation request."));
+        }
 
-          if (err)  deferred.reject(err);
-          ssm.decrypt(soapResp.ValidationResponse, config.ssm.password, config.ssm.privateKeyPath)
-            .then(function (res) {
-              //console.log(res);
-              parseString(res, function (err, result) {
-                deferred.resolve(result);
-
-              });
-            }, function (err) {
-              debug(err);
+        debug('Decrypting response');
+        ssm.decrypt(soapResp.ValidationResponse, config.ssm.password, config.ssm.privateKeyPath)
+          .then(function (res) {
+            debug('Response decrypted successfully. Parsing...');
+            //console.log(res);
+            parseString(res, function (err, result) {
+              deferred.resolve(result);
             });
-        });
-
+          }, function (err) {
+            debug(err);
+          });
       });
     });
 
