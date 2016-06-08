@@ -13,6 +13,22 @@ var Q = require("q"),
   _ = require('lodash')
   ;
 
+var soapClient;
+
+
+debug('Creating soap client...');
+if (!process.env.SIMULATE_RESPONSE) {
+  soap.createClient(config.nibss.wsdlUrl, options, function (err, client) {
+
+    if (err) {
+      console.error('Could not initialize Soap Client!');
+      throw err;
+    }
+    debug('Soap client intialization completed!');
+    soapClient = client;
+  });
+}
+
 
 function callBvnService(inputDataObject) {
   var args = {
@@ -28,13 +44,6 @@ function callBvnService(inputDataObject) {
   ssm.encrypt(xmlRequest, config.ssm.nibssKeyPath)
     .then(function (res) {
       args.requestXML = res;
-      var options = {
-        ignoredNamespaces: {
-          namespaces: ['xsi'],
-          override: true
-        },
-        timeout: 15000
-      };
 
       if (process.env.SIMULATE_RESPONSE) {
         setTimeout(function () {
@@ -52,27 +61,25 @@ function callBvnService(inputDataObject) {
         return;
       }
 
-      soap.createClient(config.nibss.wsdlUrl, options, function (err, soapClient) {
-
+      soapClient.verifySingleBVN(args, function (err, soapResp) {
         if (err) {
-          return deferred.reject(err)
+          return deferred.reject(err);
         }
 
-        soapClient.verifySingleBVN(args, function (err, soapResp) {
+        if (!soapResp) {
+          return deferred.reject(new Error("Empty response returned from Validation request."));
+        }
 
-          if (err)  deferred.reject(err);
-          ssm.decrypt(soapResp.ValidationResponse, config.ssm.password, config.ssm.privateKeyPath)
-            .then(function (res) {
-              //console.log(res);
-              parseString(res, function (err, result) {
-                deferred.resolve(result);
+        ssm.decrypt(soapResp.ValidationResponse, config.ssm.password, config.ssm.privateKeyPath)
+          .then(function (res) {
+            //console.log(res);
+            parseString(res, function (err, result) {
+              deferred.resolve(result);
 
-              });
-            }, function (err) {
-              debug(err);
             });
-        });
-
+          }, function (err) {
+            debug(err);
+          });
       });
     });
 
