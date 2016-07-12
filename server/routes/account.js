@@ -4,7 +4,7 @@
 'use strict';
 
 var config = require('../../config'),
-    AccountController = require('../controllers/AccountController');
+    AccountController = require('../controllers/AccountValidationController');
 
 
 module.exports = function (app) {

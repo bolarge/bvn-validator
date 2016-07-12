@@ -17,16 +17,16 @@ var validateRequest = function (data, requiredFields) {
 
     for (var i = 0; i < requiredFields.length; i++) {
         if (!data.hasOwnProperty(requiredFields[i]) || !data[requiredFields[i]]) {
-            return {status : false, code: ErrorList.MISSING_FIELDS.code, message: ErrorList.MISSING_FIELDS.message};
+            return {status : false, message: ErrorList.MISSING_FIELDS};
         }
     }
 
     if (!data.accountNumber.match(/^\d{10}$/)) {
-        return {status: false, code: ErrorList.INVALID_ACCOUNT_NUMBER.code, message: ErrorList.INVALID_ACCOUNT_NUMBER.message};
+        return {status: false, message: ErrorList.INVALID_ACCOUNT_NUMBER};
     }
 
     if (!data.bvn.match(/^\d{11}$/)) {
-        return {status: false, code: ErrorList.INVALID_BVN.code, message: ErrorList.INVALID_BVN.message};
+        return {status: false, message: ErrorList.INVALID_BVN};
     }
 
     return {status: true};
@@ -71,13 +71,12 @@ var checkNameMatch = function (requestDetails, responseDetails) {
     return (namesMatched > 1);
 };
 
-var generateResponse = function (valid, data, errorCode, errorMessage) {
+var generateResponse = function (valid, data, errorMessage) {
 
     var response = {
         valid: valid,
         data: data,
         error: {
-            code: errorCode,
             message: errorMessage
         }
     }
@@ -99,7 +98,11 @@ var performAccountValidation = function (request) {
             return accountService(request)
                 .then(function (result) {
                     if (!result) {
-                        throw new Error("No valid result returned.");
+                        throw new Error(ErrorList.RESULT_NOT_FOUND);
+                    }
+
+                    if (result.status != "00") {
+                        throw new Error(ErrorList.INVALID_RESULT);
                     }
                     console.log('Caching returned result');
                     AccountValidationCache.saveResult(request, result)
@@ -130,7 +133,7 @@ var accountService = function (data) {
             }
         ],
         json: true,
-        timeout: 10000,
+        timeout: config.account.accountValidationTimeout,
         strictSSL: false
     };
 
@@ -139,7 +142,7 @@ var accountService = function (data) {
         options.agentClass = Agent;
         options.agentOptions = {
             socksHost: 'localhost',
-            socksPort: 9004
+            socksPort: config.account.socksPort
         };
     }
 
@@ -165,7 +168,7 @@ module.exports.validateAccount = function (req, res) {
     var validRequest = validateRequest(userData, requiredFields);
 
     if (!validRequest.status) {
-        res.status(400).json(generateResponse(false, {}, validRequest.code, validRequest.message));
+        res.status(400).json(generateResponse(false, {}, validRequest.message));
     }
 
     return performAccountValidation(userData)
@@ -173,18 +176,18 @@ module.exports.validateAccount = function (req, res) {
 
             var bvnMatches = checkBvnMatch(userData.bvn, result.bvn);
             if(!bvnMatches) {
-                res.status(400).json(generateResponse(false, result, ErrorList.BVN_MISMATCH.code, ErrorList.BVN_MISMATCH.message));
+                res.status(400).json(generateResponse(false, result, ErrorList.BVN_MISMATCH));
             }
 
             var nameMatch = checkNameMatch(userData, result);
             if(!nameMatch) {
-                res.status(400).json(generateResponse(false, result, ErrorList.NAME_MISMATCH.code, ErrorList.NAME_MISMATCH.message));
+                res.status(400).json(generateResponse(false, result, ErrorList.NAME_MISMATCH));
             }
 
             res.status(200).json(generateResponse(true, result));
 
         }, function (err) {
-            res.status(500).send(err);
+            res.status(500).json(generateResponse(false, {}, err.message));
         });
 
 };
