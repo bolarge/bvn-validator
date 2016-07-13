@@ -86,11 +86,10 @@ var performAccountValidation = function (request) {
         .then(function (result) {
             if (result) {
                 console.log('Result cached, returning cached result: ', result);
-                return result;
+                return [result, null];
             }
 
             console.log('Calling service...');
-
             return accountService(request)
                 .then(function (result) {
                     if (!result) {
@@ -106,7 +105,12 @@ var performAccountValidation = function (request) {
                         .then(function () {
                             console.log('Result has been saved.');
                         });
-                    return result;
+
+                    if (result.status == "02") {
+                        return [result, ErrorList.RECORD_NOT_FOUND];
+                    }
+
+                    return [result, null];
                 });
         });
 };
@@ -169,14 +173,18 @@ module.exports.validateAccount = function (req, res) {
     }
 
     return performAccountValidation(validRequest.data)
-        .then(function (result) {
+        .spread(function (result, message) {
+
+            if (message) {
+                return res.status(200).json(generateResponse(false, {}, message));
+            }
 
             if (!checkBvnMatch(validRequest.data.bvn, result.bvn)) {
-                return res.status(400).json(generateResponse(false, result, ErrorList.BVN_MISMATCH));
+                return res.status(200).json(generateResponse(false, result, ErrorList.BVN_MISMATCH));
             }
 
             if (!checkNameMatch(validRequest.data, result)) {
-                return res.status(400).json(generateResponse(false, result, ErrorList.NAME_MISMATCH));
+                return res.status(200).json(generateResponse(false, result, ErrorList.NAME_MISMATCH));
             }
 
             return res.status(200).json(generateResponse(true, result));
