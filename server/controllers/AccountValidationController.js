@@ -29,25 +29,26 @@ var validateRequest = function (data, requiredFields) {
         return {status: false, message: ErrorList.INVALID_BVN};
     }
 
-    return {status: true};
+    if (!data.hasOwnProperty('useCache')) {
+        data.useCache = true;
+    }
+
+    return {status: true, data: data};
 };
 
 var splitNames = function (names) {
 
     var nameArray = [];
-    for (var i = 0; i < names.length; i++) {
-        var splitNames = _.toLower(names[i]).split(' ');
-        nameArray = nameArray.concat(splitNames);
-    }
+    names.forEach(function (name) {
+        nameArray = nameArray.concat(_.toLower(name.trim()).split(/\s+/));
+    });
 
     return nameArray;
+
 };
 
 var checkBvnMatch = function (requestBvn, responseBvn) {
-    if (responseBvn != requestBvn) {
-        return false;
-    }
-    return true;
+    return _.trim(responseBvn) == _.trim(requestBvn);
 };
 
 var checkNameMatch = function (requestDetails, responseDetails) {
@@ -69,18 +70,17 @@ var checkNameMatch = function (requestDetails, responseDetails) {
 
 var generateResponse = function (valid, data, errorMessage) {
 
-    var response = {
+    return {
         valid: valid,
         data: data,
         error: {
             message: errorMessage
         }
     }
-
-    return response;
 };
 
 var performAccountValidation = function (request) {
+
     console.log('Checking if the request is cached');
     return AccountValidationCache.getCachedResult(request)
         .then(function (result) {
@@ -89,7 +89,7 @@ var performAccountValidation = function (request) {
                 return result;
             }
 
-            console.log('No cached result, calling service');
+            console.log('Calling service...');
 
             return accountService(request)
                 .then(function (result) {
@@ -97,13 +97,14 @@ var performAccountValidation = function (request) {
                         throw new Error(ErrorList.RESULT_NOT_FOUND);
                     }
 
-                    if (result.status != "00") {
+                    if (result.status != "00" && result.status != "02") {
                         throw new Error(ErrorList.INVALID_RESULT);
                     }
+
                     console.log('Caching returned result');
                     AccountValidationCache.saveResult(request, result)
                         .then(function () {
-                            console.log('Result has been cached.');
+                            console.log('Result has been saved.');
                         });
                     return result;
                 });
@@ -133,7 +134,7 @@ var accountService = function (data) {
         strictSSL: false
     };
 
-    if (process.env.USE_SOCKS5) {
+    if (process.env.SOCKS_PORT) {
         console.log("Adding SOCKS5 parameters...");
         options.agentClass = Agent;
         options.agentOptions = {
@@ -164,26 +165,24 @@ module.exports.validateAccount = function (req, res) {
     var validRequest = validateRequest(userData, requiredFields);
 
     if (!validRequest.status) {
-        res.status(400).json(generateResponse(false, {}, validRequest.message));
+        return res.status(400).json(generateResponse(false, {}, validRequest.message));
     }
 
-    return performAccountValidation(userData)
+    return performAccountValidation(validRequest.data)
         .then(function (result) {
 
-            var bvnMatches = checkBvnMatch(userData.bvn, result.bvn);
-            if (!bvnMatches) {
-                res.status(400).json(generateResponse(false, result, ErrorList.BVN_MISMATCH));
+            if (!checkBvnMatch(validRequest.data.bvn, result.bvn)) {
+                return res.status(400).json(generateResponse(false, result, ErrorList.BVN_MISMATCH));
             }
 
-            var nameMatches = checkNameMatch(userData, result);
-            if (!nameMatches) {
-                res.status(400).json(generateResponse(false, result, ErrorList.NAME_MISMATCH));
+            if (!checkNameMatch(validRequest.data, result)) {
+                return res.status(400).json(generateResponse(false, result, ErrorList.NAME_MISMATCH));
             }
 
-            res.status(200).json(generateResponse(true, result));
+            return res.status(200).json(generateResponse(true, result));
 
         }, function (err) {
-            res.status(500).json(generateResponse(false, {}, err.message));
+            return res.status(500).json(generateResponse(false, {}, err.message));
         });
 
 };

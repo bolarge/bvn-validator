@@ -5,7 +5,6 @@
 "use strict";
 
 var mongoose = require('mongoose'),
-    _ = require('lodash'),
     q = require('q');
 
 
@@ -22,8 +21,7 @@ var storeSchema = mongoose.Schema({
         required: true
     },
     createdAt: {
-        type: Date,
-        default: Date.now
+        type: Date
     }
 });
 
@@ -38,7 +36,14 @@ module.exports = AccountValidationCache;
 module.exports.getCachedResult = function (request) {
     var deferred = q.defer();
 
-    AccountValidationCache.findOne({bankCode: request.bankCode, accountNumber: request.accountNumber}, function (err, cached) {
+    if (!request.useCache) {
+        deferred.resolve(null);
+    }
+
+    AccountValidationCache.findOne({
+        bankCode: request.bankCode,
+        accountNumber: request.accountNumber
+    }, function (err, cached) {
         if (err) {
             deferred.reject(err);
         } else {
@@ -49,24 +54,18 @@ module.exports.getCachedResult = function (request) {
     return deferred.promise;
 };
 
-
 module.exports.saveResult = function (request, result) {
-    var deferred = q.defer();
-    var resultCaching = new AccountValidationCache({
-        bankCode: request.bankCode,
-        accountNumber: request.accountNumber,
-        result: result
-    });
 
-    resultCaching.save(function (err) {
+    var deferred = q.defer();
+
+    AccountValidationCache.findOneAndUpdate({bankCode: request.bankCode, accountNumber: request.accountNumber
+    }, {result: result, createdAt: Date.now()}, {upsert: true}, function (err, updated) {
         if (err) {
             deferred.reject(err);
         } else {
-            deferred.resolve(resultCaching);
+            deferred.resolve(updated);
         }
     });
-
     return deferred.promise;
 };
-
 
