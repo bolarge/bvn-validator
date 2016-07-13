@@ -3,7 +3,7 @@
  */
 
 var ErrorList = {
-    MISSING_FIELDS: 'One or more required fields missing!',
+    MISSING_FIELDS: 'One or more required fields missing',
     INVALID_ACCOUNT_NUMBER: 'Account number should be 10 digits!',
     INVALID_BVN: 'BVN should be 11 digits!',
     BVN_MISMATCH: 'BVNs do not match!',

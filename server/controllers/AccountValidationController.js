@@ -17,7 +17,7 @@ var validateRequest = function (data, requiredFields) {
 
     for (var i = 0; i < requiredFields.length; i++) {
         if (!data.hasOwnProperty(requiredFields[i]) || !data[requiredFields[i]]) {
-            return {status: false, message: ErrorList.MISSING_FIELDS};
+            return {status: false, message: ErrorList.MISSING_FIELDS + ": " + requiredFields[i]};
         }
     }
 
@@ -29,8 +29,8 @@ var validateRequest = function (data, requiredFields) {
         return {status: false, message: ErrorList.INVALID_BVN};
     }
 
-    if (!data.hasOwnProperty('useCache')) {
-        data.useCache = true;
+    if (!data.hasOwnProperty('skipCache')) {
+        data.skipCache = false;
     }
 
     return {status: true, data: data};

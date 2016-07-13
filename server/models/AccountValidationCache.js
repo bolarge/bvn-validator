@@ -36,7 +36,7 @@ module.exports = AccountValidationCache;
 module.exports.getCachedResult = function (request) {
     var deferred = q.defer();
 
-    if (!request.useCache) {
+    if (request.skipCache) {
         deferred.resolve(null);
     }
 
