@@ -27,7 +27,7 @@ var storeSchema = mongoose.Schema({
     }
 });
 
-storeSchema.index({ "bankCode" : 1, "accountNumber" : 1 }, { unique : true });
+storeSchema.index({bankCode: 1, accountNumber: 1}, {unique: true});
 
 
 var AccountValidationCache = mongoose.model('AccountValidationCache', storeSchema);

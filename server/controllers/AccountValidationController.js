@@ -6,7 +6,7 @@
 
 var Agent = require("socks5-https-client/lib/Agent"),
     request = require('request'),
-    config =  require('../../config'),
+    config = require('../../config'),
     _ = require('lodash'),
     AccountValidationCache = require('../models/AccountValidationCache'),
     ErrorList = require('../models/ErrorList'),
@@ -17,7 +17,7 @@ var validateRequest = function (data, requiredFields) {
 
     for (var i = 0; i < requiredFields.length; i++) {
         if (!data.hasOwnProperty(requiredFields[i]) || !data[requiredFields[i]]) {
-            return {status : false, message: ErrorList.MISSING_FIELDS};
+            return {status: false, message: ErrorList.MISSING_FIELDS};
         }
     }
 
@@ -35,13 +35,9 @@ var validateRequest = function (data, requiredFields) {
 var splitNames = function (names) {
 
     var nameArray = [];
-    if (names.length == 1) {
-        nameArray = _.toLower(names[0]).split(' ');
-    } else if (names.length > 1) {
-        for (var i = 0; i < names.length; i++) {
-            var splitNames = _.toLower(names[i]).split(' ');
-            nameArray = nameArray.concat(splitNames);
-        }
+    for (var i = 0; i < names.length; i++) {
+        var splitNames = _.toLower(names[i]).split(' ');
+        nameArray = nameArray.concat(splitNames);
     }
 
     return nameArray;
@@ -175,12 +171,12 @@ module.exports.validateAccount = function (req, res) {
         .then(function (result) {
 
             var bvnMatches = checkBvnMatch(userData.bvn, result.bvn);
-            if(!bvnMatches) {
+            if (!bvnMatches) {
                 res.status(400).json(generateResponse(false, result, ErrorList.BVN_MISMATCH));
             }
 
-            var nameMatch = checkNameMatch(userData, result);
-            if(!nameMatch) {
+            var nameMatches = checkNameMatch(userData, result);
+            if (!nameMatches) {
                 res.status(400).json(generateResponse(false, result, ErrorList.NAME_MISMATCH));
             }
 
