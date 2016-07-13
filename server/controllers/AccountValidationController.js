@@ -59,7 +59,7 @@ var checkNameMatch = function (requestDetails, responseDetails) {
     var requestNames = splitNames([requestDetails.firstName, requestDetails.lastName]);
 
     for (var i = 0; i < requestNames.length; i++) {
-        if (responseNames.includes(requestNames[i])) {
+        if (responseNames.indexOf(requestNames[i]) > -1) {
             namesMatched++;
         }
     }
