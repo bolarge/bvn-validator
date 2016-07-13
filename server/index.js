@@ -29,4 +29,5 @@ module.exports.init = function (app) {
 
   //set routes
   require('./routes/bvn')(app);
+  require('./routes/account')(app);
 };
