@@ -17,16 +17,16 @@ var validateRequest = function (data, requiredFields) {
 
     for (var i = 0; i < requiredFields.length; i++) {
         if (!data.hasOwnProperty(requiredFields[i]) || !data[requiredFields[i]]) {
-            return {status: false, message: ErrorList.MISSING_FIELDS + ": " + requiredFields[i]};
+            return {status: false, message: 'REQUIRED FIELDS MISSING: ' + requiredFields[i]};
         }
     }
 
     if (!data.accountNumber.match(/^\d{10}$/)) {
-        return {status: false, message: ErrorList.INVALID_ACCOUNT_NUMBER};
+        return {status: false, message: 'INVALID_ACCOUNT_NUMBER'};
     }
 
     if (!data.bvn.match(/^\d{11}$/)) {
-        return {status: false, message: ErrorList.INVALID_BVN};
+        return {status: false, message: 'INVALID_BVN'};
     }
 
     if (!data.hasOwnProperty('skipCache')) {
@@ -68,15 +68,22 @@ var checkNameMatch = function (requestDetails, responseDetails) {
     return (namesMatched > 1);
 };
 
-var generateResponse = function (valid, data, errorMessage) {
+var generateResponse = function (valid, data, errorCode) {
 
-    return {
+    var response = {
         valid: valid,
         data: data,
-        error: {
-            message: errorMessage
-        }
+        error: {}
+    };
+
+    if (ErrorList[errorCode]) {
+        response.error.code = errorCode;
+        response.error.message = ErrorList[errorCode];
+    } else {
+       response.error.message = errorCode;
     }
+
+    return response;
 };
 
 var performAccountValidation = function (request) {
@@ -93,11 +100,11 @@ var performAccountValidation = function (request) {
             return accountService(request)
                 .then(function (result) {
                     if (!result) {
-                        throw new Error(ErrorList.RESULT_NOT_FOUND);
+                        throw new Error('RESULT_NOT_FOUND');
                     }
 
                     if (result.status != "00" && result.status != "02") {
-                        throw new Error(ErrorList.INVALID_RESULT);
+                        throw new Error('INVALID_RESULT');
                     }
 
                     console.log('Caching returned result');
@@ -107,7 +114,7 @@ var performAccountValidation = function (request) {
                         });
 
                     if (result.status == "02") {
-                        return [result, ErrorList.RECORD_NOT_FOUND];
+                        return [result, 'RECORD_NOT_FOUND'];
                     }
 
                     return [result, null];
@@ -180,11 +187,11 @@ module.exports.validateAccount = function (req, res) {
             }
 
             if (!checkBvnMatch(validRequest.data.bvn, result.bvn)) {
-                return res.status(200).json(generateResponse(false, result, ErrorList.BVN_MISMATCH));
+                return res.status(200).json(generateResponse(false, result, 'BVN_MISMATCH'));
             }
 
             if (!checkNameMatch(validRequest.data, result)) {
-                return res.status(200).json(generateResponse(false, result, ErrorList.NAME_MISMATCH));
+                return res.status(200).json(generateResponse(false, result, 'NAME_MISMATCH'));
             }
 
             return res.status(200).json(generateResponse(true, result));
