@@ -9,7 +9,8 @@ var ErrorList = {
     BVN_MISMATCH: 'BVNs do not match!',
     NAME_MISMATCH: 'Names do not match!',
     RESULT_NOT_FOUND: 'Result not found.',
-    INVALID_RESULT: 'No valid result returned.'
+    INVALID_RESULT: 'No valid result returned.',
+    RECORD_NOT_FOUND: 'Record Not Found'
 };
 
 module.exports = ErrorList;
