@@ -26,3 +26,10 @@ module.exports.nibss = {
 module.exports.authentication = {
   salt: 8
 };
+
+module.exports.account = {
+  accountValidationURL: process.env.NIBBS_ACCOUNT_URL || 'https://41.58.130.138:5035/icad/accounts',
+  accountValidationTimeout: process.env.NIBBS_ACCOUNT_TIMEOUT || 10000,
+  apiKey: process.env.API_KEY || '848939ujrhd7erhdbe7',
+  socksPort: process.env.SOCKS_PORT || false
+}
