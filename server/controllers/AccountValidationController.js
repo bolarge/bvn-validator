@@ -100,7 +100,7 @@ var performAccountValidation = function (request) {
         console.log('Result cached, returning cached result: ', result.bvn, '-', result.accountNumber, '-', result.bankCode);
 
         //BVN hack
-        if (_.trim(result.bvn) !== _.trim(request.bvn) && result.status !== '00') {
+        if (_.trim(result.bvn) !== _.trim(request.bvn) && result.status !== STATUS_SUCCESS) {
           //if stored result's BVN doesn't match the request BVN
           //and the previous stored wasn't successful
           //if it were, then the new BVN is invalid and will be caught by mismatch check.
