@@ -12,6 +12,9 @@ var Agent = require("socks5-https-client/lib/Agent"),
   ErrorList = require('../models/ErrorList'),
   q = require('q');
 
+const STATUS_SUCCESS = "00";
+const STATUS_RECORD_NOT_FOUND = "02";
+
 
 var validateRequest = function (data, requiredFields) {
 
@@ -103,7 +106,7 @@ var performAccountValidation = function (request) {
           //if it were, then the new BVN is invalid and will be caught by mismatch check.
           result = null;
         } else {
-          var error = result.status === '02' ? 'RECORD_NOT_FOUND' : null;
+          var error = result.status === STATUS_RECORD_NOT_FOUND ? 'RECORD_NOT_FOUND' : null;
           return [result, error];
         }
       }
@@ -115,7 +118,8 @@ var performAccountValidation = function (request) {
             throw new Error('RESULT_NOT_FOUND');
           }
 
-          if (result.status != "00" && result.status != "02") {
+
+          if (result.status != STATUS_SUCCESS && result.status != STATUS_RECORD_NOT_FOUND) {
             throw new Error('INVALID_RESULT');
           }
 
@@ -126,7 +130,7 @@ var performAccountValidation = function (request) {
               console.log('Result has been saved.');
             });
 
-          if (result.status == "02") {
+          if (result.status == STATUS_RECORD_NOT_FOUND) {
             return [result, 'RECORD_NOT_FOUND'];
           }
 
