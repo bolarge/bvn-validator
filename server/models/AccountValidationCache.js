@@ -60,7 +60,6 @@ module.exports.saveResult = function (request, result) {
 
   var deferred = q.defer();
 
-  result.bvn = request.bvn;
   AccountValidationCache.findOneAndUpdate({
     bankCode: request.bankCode,
     accountNumber: request.accountNumber

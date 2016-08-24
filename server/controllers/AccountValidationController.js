@@ -120,6 +120,7 @@ var performAccountValidation = function (request) {
           }
 
           console.log('Caching returned result');
+          result.bvn = request.bvn;
           AccountValidationCache.saveResult(request, result)
             .then(function () {
               console.log('Result has been saved.');
