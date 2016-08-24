@@ -5,24 +5,24 @@
 "use strict";
 
 var mongoose = require('mongoose'),
-    q = require('q');
+  q = require('q');
 
 
 var storeSchema = mongoose.Schema({
-    result: {
-        type: Object
-    },
-    bankCode: {
-        type: String,
-        required: true
-    },
-    accountNumber: {
-        type: String,
-        required: true
-    },
-    createdAt: {
-        type: Date
-    }
+  result: {
+    type: Object
+  },
+  bankCode: {
+    type: String,
+    required: true
+  },
+  accountNumber: {
+    type: String,
+    required: true
+  },
+  createdAt: {
+    type: Date
+  }
 });
 
 storeSchema.index({bankCode: 1, accountNumber: 1}, {unique: true});
@@ -34,38 +34,48 @@ var AccountValidationCache = mongoose.model('AccountValidationCache', storeSchem
 module.exports = AccountValidationCache;
 
 module.exports.getCachedResult = function (request) {
-    var deferred = q.defer();
+  var deferred = q.defer();
 
-    if (request.skipCache) {
-        deferred.resolve(null);
-    }
-
+  if (request.skipCache) {
+    setTimeout(function () {
+      deferred.resolve(null);
+    }, 10);
+  } else {
     AccountValidationCache.findOne({
-        bankCode: request.bankCode,
-        accountNumber: request.accountNumber
+      bankCode: request.bankCode,
+      accountNumber: request.accountNumber
     }, function (err, cached) {
-        if (err) {
-            deferred.reject(err);
-        } else {
-            deferred.resolve(cached ? cached.result : null);
-        }
+      if (err) {
+        deferred.reject(err);
+      } else {
+        deferred.resolve(cached && cached.result ? cached.result : null);
+      }
     });
+  }
 
-    return deferred.promise;
+  return deferred.promise;
 };
 
 module.exports.saveResult = function (request, result) {
 
-    var deferred = q.defer();
+  var deferred = q.defer();
 
-    AccountValidationCache.findOneAndUpdate({bankCode: request.bankCode, accountNumber: request.accountNumber
-    }, {result: result, createdAt: Date.now()}, {upsert: true}, function (err, updated) {
-        if (err) {
-            deferred.reject(err);
-        } else {
-            deferred.resolve(updated);
-        }
-    });
-    return deferred.promise;
+  result.bvn = request.bvn;
+  AccountValidationCache.findOneAndUpdate({
+    bankCode: request.bankCode,
+    accountNumber: request.accountNumber
+  }, {
+    result: result,
+    createdAt: Date.now()
+  }, {
+    upsert: true
+  }, function (err, updated) {
+    if (err) {
+      deferred.reject(err);
+    } else {
+      deferred.resolve(updated);
+    }
+  });
+  return deferred.promise;
 };
 
