@@ -28,8 +28,8 @@ module.exports.authentication = {
 };
 
 module.exports.account = {
-  accountValidationURL: process.env.NIBBS_ACCOUNT_URL || 'https://41.58.130.138:5035/icad/accounts',
-  accountValidationTimeout: process.env.NIBBS_ACCOUNT_TIMEOUT || 10000,
-  apiKey: process.env.API_KEY || '848939ujrhd7erhdbe7',
+  accountValidationURL: process.env.NIBSS_ACCOUNT_URL || 'https://41.58.130.138:5035/icad/accounts',
+  accountValidationTimeout: process.env.NIBSS_ACCOUNT_TIMEOUT || 10000,
+  apiKey: process.env.NIBSS_ACCOUNT_API_KEY || '848939ujrhd7erhdbe7',
   socksPort: process.env.SOCKS_PORT || false
 }
