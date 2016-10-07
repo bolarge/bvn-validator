@@ -19,7 +19,7 @@ var Agent = require('socks5-https-client/lib/Agent'),
   q = require('q');
 
 const STATUS_SUCCESS = "00";
-const STATUS_RECORD_NOT_FOUND = "21";
+const STATUS_RECORD_NOT_FOUND = "25";
 
 
 var soapClient;
