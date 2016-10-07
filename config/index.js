@@ -26,7 +26,7 @@ module.exports.nibss = {
     privateKeyPath: process.env.NIP_PRIVATE_KEY_PATH || 'keys/private.key',
     password: process.env.NIP_PASSWORD || "OneFi123",
     schemeCode: process.env.NIP_SCHEME_CODE || "999061",
-    channelCode: "8",
+    channelCode: process.env.NIP_CHANNEL_CODE || "8",
     wsdl: process.env.NIP_WSDL || 'http://196.6.103.10:86/NIPWS/NIPInterface?wsdl'
   }
 };
