@@ -6,7 +6,7 @@
 
 var Agent = require('socks5-https-client/lib/Agent'),
   request = require('request'),
-  config = require('../../config'),
+  config = require('../../config/index'),
   q = require('q');
 
 exports.STATUS_SUCCESS = "00";

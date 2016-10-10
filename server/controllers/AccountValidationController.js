@@ -12,7 +12,7 @@ var Agent = require('socks5-https-client/lib/Agent'),
   config = require('../../config'),
   _ = require('lodash'),
   AccountValidationCache = require('../models/AccountValidationCache'),
-  NIPAccountValidation = require('../controllers/NIPAccountValidationController'),
+  NIPAccountValidation = require('../services/NIPAccountValidation'),
   ErrorList = require('../models/ErrorList'),
   q = require('q');
 

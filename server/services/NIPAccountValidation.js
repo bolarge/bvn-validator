@@ -7,14 +7,14 @@
 var Agent = require('socks5-https-client/lib/Agent'),
   soap = require('soap'),
   moment = require('moment'),
-  ssm = require('../lib/ssm'),
+  ssm = require('../lib/ssm/index'),
   js2Xml = require('js2xmlparser'),
   parseString = require('xml2js').parseString,
   request = require('request'),
-  config = require('../../config'),
+  config = require('../../config/index'),
   _ = require('lodash'),
   AccountValidationCache = require('../models/AccountValidationCache'),
-  Utils = require('../services/Utils'),
+  Utils = require('./Utils'),
   ErrorList = require('../models/ErrorList'),
   q = require('q');
 
@@ -61,8 +61,6 @@ module.exports.nipAccountService = function (data) {
   if (!soapClient) {
     throw new Error('Soap client is still initializing');
   }
-
-  console.log(xmlRequest);
 
   console.log('Encrypting request...');
   ssm.encrypt(xmlRequest, config.ssm.nibssKeyPath)
