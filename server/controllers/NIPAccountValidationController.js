@@ -14,7 +14,7 @@ var Agent = require('socks5-https-client/lib/Agent'),
   config = require('../../config'),
   _ = require('lodash'),
   AccountValidationCache = require('../models/AccountValidationCache'),
-  AccountController = require('../controllers/AccountValidationController'),
+  Utils = require('../services/Utils'),
   ErrorList = require('../models/ErrorList'),
   q = require('q');
 
@@ -48,7 +48,7 @@ module.exports.nipAccountService = function (data) {
   var args = {};
 
   var request = {
-    SessionID: config.nibss.nip.schemeCode + moment().format('YYMMDDHHmmss') + AccountController.randomString(12, '0123456789'),
+    SessionID: config.nibss.nip.schemeCode + moment().format('YYMMDDHHmmss') + Utils.randomString(12, '0123456789'),
     DestinationInstitutionCode: data.bankCode,
     ChannelCode: config.nibss.nip.channelCode,
     AccountNumber: data.accountNumber
