@@ -20,7 +20,15 @@ module.exports.ssm = {
 
 module.exports.nibss = {
   organisationCode: process.env.NIBSS_ORGANISATION_CODE || '002002',
-  wsdlUrl: process.env.NIBSS_WSDL_URL || 'http://196.6.103.100/BVNValidationBooleanMatch/bvnValidation?wsdl'
+  wsdlUrl: process.env.NIBSS_WSDL_URL || 'http://196.6.103.100/BVNValidationBooleanMatch/bvnValidation?wsdl',
+  nip: {
+    publicKeyPath: process.env.NIP_PUBLIC_KEY_PATH || 'keys/public.key',
+    privateKeyPath: process.env.NIP_PRIVATE_KEY_PATH || 'keys/private.key',
+    password: process.env.NIP_PASSWORD || "OneFi123",
+    schemeCode: process.env.NIP_SCHEME_CODE || "999061",
+    channelCode: process.env.NIP_CHANNEL_CODE || "8",
+    wsdl: process.env.NIP_WSDL || 'http://196.6.103.10:86/NIPWS/NIPInterface?wsdl'
+  }
 };
 
 module.exports.authentication = {

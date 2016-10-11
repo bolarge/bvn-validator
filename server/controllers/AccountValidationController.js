@@ -4,16 +4,20 @@
 
 "use strict";
 
-var Agent = require("socks5-https-client/lib/Agent"),
+var Agent = require('socks5-https-client/lib/Agent'),
+  soap = require('soap'),
+  moment = require('moment'),
+  ssm = require('../lib/ssm'),
   request = require('request'),
   config = require('../../config'),
   _ = require('lodash'),
   AccountValidationCache = require('../models/AccountValidationCache'),
+  NIPAccountValidation = require('../services/NIPAccountValidation'),
   ErrorList = require('../models/ErrorList'),
   q = require('q');
 
-const STATUS_SUCCESS = "00";
-const STATUS_RECORD_NOT_FOUND = "02";
+const STATUS_SUCCESS = NIPAccountValidation.STATUS_SUCCESS;
+const STATUS_RECORD_NOT_FOUND = NIPAccountValidation.STATUS_RECORD_NOT_FOUND;
 
 
 var validateRequest = function (data, requiredFields) {
@@ -112,7 +116,7 @@ var performAccountValidation = function (request) {
       }
 
       console.log('Calling service...');
-      return accountService(request)
+      return NIPAccountValidation.nipAccountService(request)
         .then(function (result) {
           if (!result) {
             throw new Error('RESULT_NOT_FOUND');
@@ -138,53 +142,6 @@ var performAccountValidation = function (request) {
         });
     });
 };
-
-var accountService = function (data) {
-
-  var deferred = q.defer();
-  var response = {};
-
-  var options = {
-    url: config.account.accountValidationURL,
-    headers: {
-      'content-type': 'application/json',
-      'Accept': 'application/json',
-      'apiKey': config.account.apiKey
-    },
-    body: [
-      {
-        "bankCode": data.bankCode,
-        "accountNumber": data.accountNumber,
-        "bvn": data.bvn
-      }
-    ],
-    json: true,
-    timeout: config.account.accountValidationTimeout,
-    strictSSL: false
-  };
-
-  if (process.env.SOCKS_PORT) {
-    console.log("Adding SOCKS5 parameters...");
-    options.agentClass = Agent;
-    options.agentOptions = {
-      socksHost: 'localhost',
-      socksPort: config.account.socksPort
-    };
-  }
-
-  request.post(options, function (err, result) {
-    if (err) {
-      deferred.reject(err);
-    } else {
-      response = result.body[0];
-      deferred.resolve(response);
-    }
-  });
-
-  return deferred.promise;
-
-};
-
 
 module.exports.validateAccount = function (req, res) {
   console.log("Starting account validation...");
