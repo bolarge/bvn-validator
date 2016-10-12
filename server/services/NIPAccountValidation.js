@@ -11,6 +11,7 @@ var soap = require('soap'),
   parseString = require('xml2js').parseString,
   request = require('request'),
   debug = require('debug')('bvn'),
+  rollbar = require('./rollbar.js').instance(),
   config = require('../../config/index'),
   Utils = require('./Utils'),
   q = require('q');
@@ -99,8 +100,20 @@ module.exports.nipAccountService = function (data) {
             });
           }, function (err) {
             debug(err);
+          })
+          .catch(function (err) {
+            if (typeof err !== 'string') {
+              rollbar.handleError(err);
+            }
+            return deferred.reject(err);
           });
       });
+    })
+    .catch(function (err) {
+      if (typeof err !== 'string') {
+        rollbar.handleError(err);
+      }
+      return deferred.reject(err);
     });
 
   return deferred.promise;
