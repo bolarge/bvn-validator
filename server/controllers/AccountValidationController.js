@@ -4,16 +4,11 @@
 
 "use strict";
 
-var Agent = require('socks5-https-client/lib/Agent'),
-  soap = require('soap'),
-  moment = require('moment'),
-  ssm = require('../lib/ssm'),
-  request = require('request'),
-  config = require('../../config'),
-  _ = require('lodash'),
+var _ = require('lodash'),
   AccountValidationCache = require('../models/AccountValidationCache'),
   NIPAccountValidation = require('../services/NIPAccountValidation'),
   ErrorList = require('../models/ErrorList'),
+  Utils = require('../services/Utils'),
   q = require('q');
 
 const STATUS_SUCCESS = NIPAccountValidation.STATUS_SUCCESS;
@@ -22,10 +17,10 @@ const STATUS_RECORD_NOT_FOUND = NIPAccountValidation.STATUS_RECORD_NOT_FOUND;
 
 var validateRequest = function (data, requiredFields) {
 
-  for (var i = 0; i < requiredFields.length; i++) {
-    if (!data.hasOwnProperty(requiredFields[i]) || !data[requiredFields[i]]) {
-      return {status: false, message: 'REQUIRED FIELDS MISSING: ' + requiredFields[i]};
-    }
+  var validate = Utils.validateRequest(data, requiredFields);
+
+  if (!validate.status) {
+    return validate;
   }
 
   if (!data.accountNumber.match(/^\d{10}$/)) {
@@ -75,24 +70,6 @@ var checkNameMatch = function (requestDetails, responseDetails) {
 
   console.log("Names matched: ", namesMatched);
   return (namesMatched > 1);
-};
-
-var generateResponse = function (valid, data, errorCode) {
-
-  var response = {
-    valid: valid,
-    data: data,
-    error: {}
-  };
-
-  if (ErrorList[errorCode]) {
-    response.error.code = errorCode;
-    response.error.message = ErrorList[errorCode];
-  } else {
-    response.error.message = errorCode;
-  }
-
-  return response;
 };
 
 var performAccountValidation = function (request) {
@@ -151,30 +128,29 @@ module.exports.validateAccount = function (req, res) {
   var validRequest = validateRequest(userData, requiredFields);
 
   if (!validRequest.status) {
-    return res.status(400).json(generateResponse(false, {}, validRequest.message));
+    return res.status(400).json(Utils.generateResponse(false, {}, validRequest.message));
   }
 
   return performAccountValidation(validRequest.data)
     .spread(function (result, message) {
 
       if (message) {
-        return res.status(200).json(generateResponse(false, {}, message));
+        return res.status(200).json(Utils.generateResponse(false, {}, message));
       }
 
       if (!checkBvnMatch(validRequest.data.bvn, result.bvn)) {
-        return res.status(200).json(generateResponse(false, result, 'BVN_MISMATCH'));
+        return res.status(200).json(Utils.generateResponse(false, result, 'BVN_MISMATCH'));
       }
 
       if (!checkNameMatch(validRequest.data, result)) {
-        return res.status(200).json(generateResponse(false, result, 'NAME_MISMATCH'));
+        return res.status(200).json(Utils.generateResponse(false, result, 'NAME_MISMATCH'));
       }
 
-      return res.status(200).json(generateResponse(true, result));
+      return res.status(200).json(Utils.generateResponse(true, result));
 
     })
     .catch(function (err) {
-      return res.status(500).json(generateResponse(false, {}, err.message));
-    })
-    ;
-
+      return res.status(500).json(Utils.generateResponse(false, {}, err.message));
+    });
 };
+
