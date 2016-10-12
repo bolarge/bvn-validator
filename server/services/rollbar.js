@@ -6,9 +6,9 @@
 //set up error reporting
 var options = {
     exitOnUncaughtException: true,
-    environment: (process.env.NODE_ENV || 'staging') + '-bvn-validator'
+    environment: (process.env.NODE_ENV || 'staging')
   }, rollbar = require('rollbar'),
-  rollbarToken = process.env.ROLLBAR_TOKEN || '404dfd970e0e4b97bf24db346e278ab3'
+  rollbarToken = process.env.ROLLBAR_TOKEN || 'afe87282f45a4585a7888a07f976d2e2'
   ;
 
 

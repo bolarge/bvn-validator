@@ -15,7 +15,7 @@ var soap = require('soap'),
 
 var soapClient;
 
-if (process.env.NIP_SERVICES === 'true') {
+if (process.env.NIP_SERVICES !== 'true') {
   console.log('Creating soap client for NIP services...');
   soap.createClient(config.nibss.nip.wsdl, {
     ignoredNamespaces: {
