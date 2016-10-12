@@ -10,6 +10,7 @@ var soap = require('soap'),
   js2Xml = require('js2xmlparser'),
   parseString = require('xml2js').parseString,
   request = require('request'),
+  debug = require('debug')('bvn'),
   config = require('../../config/index'),
   Utils = require('./Utils'),
   q = require('q');
@@ -56,6 +57,7 @@ module.exports.nipAccountService = function (data) {
     throw new Error('Soap client is still initializing');
   }
 
+  debug(xmlRequest);
   console.log('Encrypting request...');
   ssm.encrypt(xmlRequest, config.nibss.nip.nibssKeyPath)
     .then(function (response) {
