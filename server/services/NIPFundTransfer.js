@@ -11,6 +11,7 @@ var soap = require('soap'),
   parseString = require('xml2js').parseString,
   request = require('request'),
   debug = require('debug')('bvn'),
+  rollbar = require('./rollbar.js').instance(),
   config = require('../../config/index'),
   AccountValidationCache = require('../models/AccountValidationCache'),
   Utils = require('./Utils'),
@@ -26,13 +27,19 @@ module.exports.fundTransfer = function (data, soapClient) {
   var request = {
     SessionID: config.nibss.nip.schemeCode + moment().format('YYMMDDHHmmss') + Utils.randomString(12, '0123456789'),
     DestinationInstitutionCode: data.DestinationInstitutionCode,
+    NameEnquiryRef: data.NameEnquiryRef,
     ChannelCode: config.nibss.nip.channelCode,
     BeneficiaryAccountName: data.BeneficiaryAccountName,
     BeneficiaryAccountNumber: data.BeneficiaryAccountNumber,
+    BeneficiaryKYCLevel: data.BeneficiaryKYCLevel,
     BeneficiaryBankVerificationNumber: data.BeneficiaryBankVerificationNumber,
     OriginatorAccountName: data.OriginatorAccountName,
     OriginatorAccountNumber: data.OriginatorAccountNumber,
+    OriginatorKYCLevel: data.OriginatorKYCLevel,
     OriginatorBankVerificationNumber: data.OriginatorBankVerificationNumber,
+    TransactionLocation: data.TransactionLocation,
+    Narration: data.Narration,
+    PaymentReference: data.PaymentReference,
     Amount: data.Amount
   };
 
@@ -75,8 +82,20 @@ module.exports.fundTransfer = function (data, soapClient) {
             });
           }, function (err) {
             debug(err);
+          })
+          .catch(function (err) {
+            if (typeof err !== 'string') {
+              rollbar.handleError(err);
+            }
+            return deferred.reject(err);
           });
       });
+    })
+    .catch(function (err) {
+      if (typeof err !== 'string') {
+        rollbar.handleError(err);
+      }
+      return deferred.reject(err);
     });
 
   return deferred.promise;
