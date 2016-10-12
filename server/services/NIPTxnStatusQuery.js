@@ -39,7 +39,7 @@ module.exports.getTxnStatus = function (data, soapClient) {
   console.log(xmlRequest);
 
   console.log('Encrypting request...');
-  ssm.encrypt(xmlRequest, config.ssm.nibssKeyPath)
+  ssm.encrypt(xmlRequest, config.nibss.nip.nibssKeyPath)
     .then(function (response) {
       args.request = response;
       console.log('Request has been encrypted');

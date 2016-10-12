@@ -22,6 +22,7 @@ module.exports.nibss = {
   organisationCode: process.env.NIBSS_ORGANISATION_CODE || '002002',
   wsdlUrl: process.env.NIBSS_WSDL_URL || 'http://196.6.103.100/BVNValidationBooleanMatch/bvnValidation?wsdl',
   nip: {
+    nibssKeyPath: process.env.NIP_NIBSS_KEY_PATH || 'keys/nibss.key',
     publicKeyPath: process.env.NIP_PUBLIC_KEY_PATH || 'keys/public.key',
     privateKeyPath: process.env.NIP_PRIVATE_KEY_PATH || 'keys/private.key',
     password: process.env.NIP_PASSWORD || "OneFi123",
