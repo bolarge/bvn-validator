@@ -10,6 +10,7 @@ var soap = require('soap'),
   js2Xml = require('js2xmlparser'),
   parseString = require('xml2js').parseString,
   request = require('request'),
+  debug = require('debug')('bvn'),
   config = require('../../config/index'),
   AccountValidationCache = require('../models/AccountValidationCache'),
   Utils = require('./Utils'),
@@ -37,7 +38,6 @@ module.exports.getTxnStatus = function (data, soapClient) {
   }
 
   console.log(xmlRequest);
-
   console.log('Encrypting request...');
   ssm.encrypt(xmlRequest, config.nibss.nip.nibssKeyPath)
     .then(function (response) {
