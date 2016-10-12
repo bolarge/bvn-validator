@@ -57,7 +57,7 @@ module.exports.nipAccountService = function (data) {
   }
 
   console.log('Encrypting request...');
-  ssm.encrypt(xmlRequest, config.ssm.nibssKeyPath)
+  ssm.encrypt(xmlRequest, config.nibss.nip.nibssKeyPath)
     .then(function (response) {
       debug(response);
       args.request = response;
