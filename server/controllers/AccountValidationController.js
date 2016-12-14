@@ -45,14 +45,7 @@ var performAccountValidation = function (request) {
       if (result) {
 
         console.log('Result cached, returning cached result: ', result.data.bvn, '-', result.data.accountNumber, '-', result.data.bankCode);
-
-        //BVN hack
-        if (_.trim(result.data.bvn) !== _.trim(request.bvn) && result.valid !== true) {
-          //if stored result's BVN doesn't match the request BVN
-          //and the previous stored wasn't successful
-          result = null;
-        }
-        return [result, 'RESULT_NOT_FOUND'];
+        return [result, null];
       }
 
       console.log('Calling service...');
@@ -60,6 +53,10 @@ var performAccountValidation = function (request) {
         .then(function (result) {
           if (!result) {
             throw new Error('RECORD_NOT_FOUND');
+          }
+
+          if(result.systemError) {
+            throw new Error('Account Validation System Error!');
           }
 
           if (result.valid) {

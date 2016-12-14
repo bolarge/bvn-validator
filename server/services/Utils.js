@@ -4,7 +4,8 @@
 
 "use strict";
 
-var ErrorList = require('../models/ErrorList');
+var ErrorList = require('../models/ErrorList'),
+    _ = require('lodash');
 
 module.exports = {
   randomString: function (length, chars) {
@@ -49,6 +50,17 @@ module.exports = {
     }
 
     return response;
+  },
+
+  splitNames: function (names) {
+    var nameArray = [];
+    names.forEach(function (name) {
+      if (name && name !== "") {
+        nameArray = nameArray.concat(_.toUpper(name.trim()).split(/\s+/));
+      }
+    });
+
+    return nameArray;
   }
 
 };
