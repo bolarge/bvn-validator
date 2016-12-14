@@ -41,4 +41,10 @@ module.exports.account = {
   accountValidationTimeout: process.env.NIBSS_ACCOUNT_TIMEOUT || 10000,
   apiKey: process.env.NIBSS_ACCOUNT_API_KEY || '848939ujrhd7erhdbe7',
   socksPort: process.env.SOCKS_PORT || false
+};
+
+module.exports.cpos = {
+  baseURL: process.env.CPOS_BASE_URL ||  'http://54.200.6.143:8080',
+  username: process.env.CPOS_USERNAME || 'user',
+  password: process.env.CPOS_PASSWORD || 'password'
 }

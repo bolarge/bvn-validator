@@ -6,13 +6,10 @@
 
 var _ = require('lodash'),
   AccountValidationCache = require('../models/AccountValidationCache'),
-  NIPAccountValidation = require('../services/NIPAccountValidation'),
+  CPoSAccountValidation = require('../services/CPoSAccountValidation'),
   ErrorList = require('../models/ErrorList'),
   Utils = require('../services/Utils'),
   q = require('q');
-
-const STATUS_SUCCESS = NIPAccountValidation.STATUS_SUCCESS;
-const STATUS_RECORD_NOT_FOUND = NIPAccountValidation.STATUS_RECORD_NOT_FOUND;
 
 
 var validateRequest = function (data, requiredFields) {
@@ -38,39 +35,7 @@ var validateRequest = function (data, requiredFields) {
   return {status: true, data: data};
 };
 
-var splitNames = function (names) {
 
-  var nameArray = [];
-  names.forEach(function (name) {
-    if (name && name !== "") {
-      nameArray = nameArray.concat(_.toLower(name.trim()).split(/\s+/));
-    }
-  });
-
-  return nameArray;
-
-};
-
-var checkBvnMatch = function (requestBvn, responseBvn) {
-  return _.trim(responseBvn) == _.trim(requestBvn);
-};
-
-var checkNameMatch = function (requestDetails, responseDetails) {
-
-  var namesMatched = 0;
-
-  var responseNames = splitNames([responseDetails.otherNames, responseDetails.surname]);
-  var requestNames = splitNames([requestDetails.firstName, requestDetails.lastName]);
-
-  for (var i = 0; i < requestNames.length; i++) {
-    if (responseNames.indexOf(requestNames[i]) > -1) {
-      namesMatched++;
-    }
-  }
-
-  console.log("Names matched: ", namesMatched);
-  return (namesMatched > 1);
-};
 
 var performAccountValidation = function (request) {
 
@@ -78,42 +43,33 @@ var performAccountValidation = function (request) {
   return AccountValidationCache.getCachedResult(request)
     .then(function (result) {
       if (result) {
-        console.log('Result cached, returning cached result: ', result.bvn, '-', result.accountNumber, '-', result.bankCode);
+
+        console.log('Result cached, returning cached result: ', result.data.bvn, '-', result.data.accountNumber, '-', result.data.bankCode);
 
         //BVN hack
-        if (_.trim(result.bvn) !== _.trim(request.bvn) && result.status !== STATUS_SUCCESS) {
+        if (_.trim(result.data.bvn) !== _.trim(request.bvn) && result.valid !== true) {
           //if stored result's BVN doesn't match the request BVN
           //and the previous stored wasn't successful
-          //if it were, then the new BVN is invalid and will be caught by mismatch check.
           result = null;
-        } else {
-          var error = result.status === STATUS_RECORD_NOT_FOUND ? 'RECORD_NOT_FOUND' : null;
-          return [result, error];
         }
+        return [result, 'RESULT_NOT_FOUND'];
       }
 
       console.log('Calling service...');
-      return NIPAccountValidation.nipAccountService(request)
+      return CPoSAccountValidation.accountValidation(request)
         .then(function (result) {
           if (!result) {
-            throw new Error('RESULT_NOT_FOUND');
+            throw new Error('RECORD_NOT_FOUND');
           }
 
-
-          if (result.status != STATUS_SUCCESS && result.status != STATUS_RECORD_NOT_FOUND) {
-            throw new Error('INVALID_RESULT');
+          if (result.valid) {
+            console.log('Caching valid result');
+            AccountValidationCache.saveResult(request, result)
+              .then(function () {
+                console.log('Result has been saved.');
+              });
           }
 
-          console.log('Caching returned result');
-          result.bvn = request.bvn;
-          AccountValidationCache.saveResult(request, result)
-            .then(function () {
-              console.log('Result has been saved.');
-            });
-
-          if (result.status == STATUS_RECORD_NOT_FOUND) {
-            return [result, 'RECORD_NOT_FOUND'];
-          }
 
           return [result, null];
         });
@@ -138,15 +94,7 @@ module.exports.validateAccount = function (req, res) {
         return res.status(200).json(Utils.generateResponse(false, {}, message));
       }
 
-      if (!checkBvnMatch(validRequest.data.bvn, result.bvn)) {
-        return res.status(200).json(Utils.generateResponse(false, result, 'BVN_MISMATCH'));
-      }
-
-      if (!checkNameMatch(validRequest.data, result)) {
-        return res.status(200).json(Utils.generateResponse(false, result, 'NAME_MISMATCH'));
-      }
-
-      return res.status(200).json(Utils.generateResponse(true, result));
+      return res.status(200).json(result);
 
     })
     .catch(function (err) {
