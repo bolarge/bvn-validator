@@ -4,17 +4,14 @@
 
 "use strict";
 
-var _ = require('lodash'),
-  AccountValidationCache = require('../models/AccountValidationCache'),
-  CPoSAccountValidation = require('../services/CPoSAccountValidation'),
-  ErrorList = require('../models/ErrorList'),
-  Utils = require('../services/Utils'),
-  q = require('q');
+const AccountValidationCache = require('../models/AccountValidationCache'),
+  CPoSAccountValidation = require('../services/CPoSClient'),
+  Utils = require('../services/Utils');
 
 
-var validateRequest = function (data, requiredFields) {
+const validateRequest = function (data, requiredFields) {
 
-  var validate = Utils.validateRequest(data, requiredFields);
+  const validate = Utils.validateRequest(data, requiredFields);
 
   if (!validate.status) {
     return validate;
@@ -36,8 +33,7 @@ var validateRequest = function (data, requiredFields) {
 };
 
 
-
-var performAccountValidation = function (request) {
+const performAccountValidation = function (request) {
 
   console.log('Checking if the request is cached');
   return AccountValidationCache.getCachedResult(request)
@@ -55,7 +51,7 @@ var performAccountValidation = function (request) {
             throw new Error('RECORD_NOT_FOUND');
           }
 
-          if(result.systemError) {
+          if (result.systemError) {
             throw new Error('Account Validation System Error!');
           }
 
@@ -76,9 +72,9 @@ var performAccountValidation = function (request) {
 module.exports.validateAccount = function (req, res) {
   console.log("Starting account validation...");
 
-  var userData = req.body;
-  var requiredFields = ['bvn', 'bankCode', 'accountNumber', 'firstName', 'lastName'];
-  var validRequest = validateRequest(userData, requiredFields);
+  const userData = req.body;
+  const requiredFields = ['bvn', 'bankCode', 'accountNumber', 'firstName', 'lastName'];
+  const validRequest = validateRequest(userData, requiredFields);
 
   if (!validRequest.status) {
     return res.status(400).json(Utils.generateResponse(false, {}, validRequest.message));
