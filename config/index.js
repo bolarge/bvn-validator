@@ -44,7 +44,7 @@ module.exports.account = {
 };
 
 module.exports.cpos = {
-  baseURL: process.env.CPOS_BASE_URL ||  'http://54.200.6.143:8080',
+  baseURL: process.env.CPOS_BASE_URL || 'http://54.200.6.143:8080',
   username: process.env.CPOS_USERNAME || 'user',
   password: process.env.CPOS_PASSWORD || 'password'
-}
+};
