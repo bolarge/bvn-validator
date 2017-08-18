@@ -12,7 +12,7 @@
     "debug": "^2.2.0",
     "express": "^4.13.4",
     "gingerbread": "~0.4.0",
-    "java": "^0.7.1",
+    "java": "^0.8.0",
     "js2xmlparser": "^1.0.0",
     "json-2-csv": "^2.0.3",
     "json2csv": "^2.12.0",
