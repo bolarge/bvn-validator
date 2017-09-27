@@ -13,7 +13,7 @@ var Q = require("q"),
   config = require('../../config'),
   ResultCache = require('../models/ResultCache'),
   _ = require('lodash')
-  ;
+;
 
 var soapClient,
   options = {
@@ -121,6 +121,11 @@ var performBvnMatch = function (request) {
           if (!result) {
             throw new Error("No valid result returned.");
           }
+
+          if (!result.ValidationResponse || !result.ValidationResponse.RequestStatus || !["00", "01"].includes(result.ValidationResponse.RequestStatus[0])) {
+            throw new Error("BVN Result is not valid: " + JSON.stringify(result));
+          }
+
           debug('Caching returned result');
           ResultCache.saveResult(request, result)
             .then(function () {
@@ -157,7 +162,9 @@ var parseResult = function (res) {
   reason += (validity || " check failed");
 
   return {
-    valid: resp && resp.RequestStatus == "00" && validity && validity === 'VALID',
+    valid: resp && Array.isArray(resp.RequestStatus)
+      && resp.RequestStatus[0] === "00"
+      && validity === 'VALID',
     reason: reason
   };
 };
