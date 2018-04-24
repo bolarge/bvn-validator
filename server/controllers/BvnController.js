@@ -12,8 +12,9 @@ var Q = require("q"),
   parseString = require('xml2js').parseString,
   config = require('../../config'),
   ResultCache = require('../models/ResultCache'),
-  _ = require('lodash')
-;
+  _ = require('lodash');
+
+const BVNService = require('../services/BVNService');
 
 var soapClient,
   options = {
@@ -209,5 +210,23 @@ module.exports.validateBoolean = function (req, res) {
       res.status(500)
         .send(err);
     });
+
+};
+
+
+module.exports.resolveBvn = function (req, res) {
+  if (!req.params.bvn) {
+    return res.status(400).send("No BVN to resolve.");
+  }
+  BVNService.resolve(req.params.bvn)
+    .then(function(result) {
+      if (!result) {
+        return res.status(404).send("BVN not found")
+      }
+      res.json(result)
+    })
+    .catch(function(err) {
+      res.status(500).send(err.message);
+    })
 
 };

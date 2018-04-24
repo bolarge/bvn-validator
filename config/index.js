@@ -29,7 +29,11 @@ module.exports.nibss = {
     schemeCode: process.env.NIP_SCHEME_CODE || "999061",
     channelCode: process.env.NIP_CHANNEL_CODE || "8",
     wsdl: process.env.NIP_WSDL || 'http://196.6.103.10:86/NIPWS/NIPInterface?wsdl'
-  }
+  },
+  portalBaseUrl: process.env.NIBSS_PORTAL_URL || 'https://bvnvalidationportal.nibss-plc.com.ng',
+  portalUser: process.env.NIBSS_USERNAME || '',
+  portalPassword: process.env.NIBSS_PASSWORD || '',
+  portalTimeout: parseInt(process.env.NIBSS_PORTAL_TIMEOUT_SECONDS) || 60
 };
 
 module.exports.authentication = {
@@ -47,4 +51,9 @@ module.exports.cpos = {
   baseURL: process.env.CPOS_BASE_URL || 'http://54.200.6.143:8080',
   username: process.env.CPOS_USERNAME || 'user',
   password: process.env.CPOS_PASSWORD || 'password'
+};
+
+module.exports.paystack = {
+  baseUrl: process.env.PAYSTACK_BASE_URL || 'https://api.paystack.co',
+  authSecret: process.env.PAYSTACK_SECRET || ''
 };
