@@ -8,7 +8,7 @@
 
 "use strict";
 
-const mongoose = require('../services/connection').mongoose,
+const mongoose = require('mongoose'),
   debug = require('debug')('db'),
   config = require('../../config');
 
@@ -31,7 +31,8 @@ let storeSchema = mongoose.Schema({
     type: String
   },
   nin: {
-    type: String
+    type: String,
+    index: true
   },
   dob: {
     type: String,
@@ -72,7 +73,7 @@ module.exports.getCachedResult = function (bvn) {
 
 
 module.exports.saveResult = function (result) {
-  return BvnCache.findOneAndUpdate({bvn: result.bvn}, {$set: result}, {upsert: true})
+  return BvnCache.findOneAndUpdate({bvn: result.bvn}, {$set: result}, {upsert: true, new: true})
     .then((r) => {
       return r;
     })

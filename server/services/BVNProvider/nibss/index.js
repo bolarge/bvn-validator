@@ -19,15 +19,14 @@ let phantomInstance;
 
 
 const pageLoad = async (page, isCond, errorMessage, checks = 0) => {
-  if (await isCond(page)) {
-    return true;
-  }
-  if (checks < TIMEOUT_SECONDS * 2) {
-    return Promise.delay(500)
-      .then(() => pageLoad(page, isCond, errorMessage, ++checks));
+  while (checks < TIMEOUT_SECONDS * 2) {
+    await Promise.delay(500);
+    ++checks;
+    if (await isCond(page)) {
+      return page;
+    }
   }
 
-  console.log(await page.property('content'));
   throw new Error(errorMessage || 'page time out');
 };
 
@@ -49,8 +48,7 @@ const doLogin = async (page) => {
     password: config.nibss.portal.password
   });
 
-  await pageLoad(page, PageChecker.isSearchPage, 'Could not log into portal');
-  return page;
+  return await pageLoad(page, PageChecker.isSearchPage, 'Could not log into portal');
 };
 
 
@@ -66,8 +64,7 @@ const doBvnSearch = async (page, params) => {
     HTMLFormElement.prototype.submit.call(form);
   }, params);
 
-  await pageLoad(page, PageChecker.isResultPage);
-  return page;
+  return await pageLoad(page, PageChecker.isResultPage);
 };
 
 
@@ -82,7 +79,8 @@ const doNinSearch =  async (page, params) => {
     form.elements['idNo'].value = params.nin;
     HTMLFormElement.prototype.submit.call(form);
   }, params);
-  return page;
+
+  return await pageLoad(page, PageChecker.isResultPage);
 };
 
 const initPage = async () => {
