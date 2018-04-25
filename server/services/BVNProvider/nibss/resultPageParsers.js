@@ -12,7 +12,7 @@ const isDateData = (dataKey) => {
   return ['registrationDate', 'dob'].includes(dataKey);
 };
 
-module.exports.parseBvnResult =  async (content) => {
+module.exports.parseBvnResult = (content) => {
   const map = new Map();
   Object.keys(bvnSchema).forEach(key => {
     map.set(key, bvnSchema[key]);
@@ -45,7 +45,7 @@ module.exports.parseBvnResult =  async (content) => {
 };
 
 
-module.exports.parseNinResult =  async (content) => {
+module.exports.parseNinResult = (content) => {
   const map = new Map();
   Object.keys(ninSchema).forEach(key => {
     map.set(key, ninSchema[key]);

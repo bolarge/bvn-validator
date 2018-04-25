@@ -4,7 +4,7 @@
 const phantom = require('phantom');
 const Promise = require('bluebird');
 const PageChecker = require('./pageChecker');
-const parsers = require('./parsers');
+const parsers = require('./resultPageParsers');
 const config = require('../../../../config');
 const TIMEOUT_SECONDS = config.nibss.portal.timeout; // Seconds per page load
 const moment = require('moment');
@@ -68,7 +68,7 @@ const doBvnSearch = async (page, params) => {
 };
 
 
-const doNinSearch =  async (page, params) => {
+const doNinSearch = async (page, params) => {
   const result = await page.evaluate(function (params) {
     // Page context
     var form = document.querySelector('form[action="/bvnnbo/bank/user/nimc"]');
@@ -136,7 +136,7 @@ module.exports.resolve = async (bvn) => {
     if (await PageChecker.isResultNotFoundPage(page)) {
       return null;
     }
-    const result =  parsers.parseBvnResult(await page.property('content'));
+    const result = parsers.parseBvnResult(await page.property('content'));
     result.provider = module.exports.name;
     return result;
   } finally {
@@ -154,6 +154,9 @@ module.exports.fetchNinData = async (nin) => {
     console.log("------Login page-----", new Date());
     console.log('Doing log in');
     page = await doLogin(page);
+    // Re Init page to prevent page.open failure
+    page.close();
+    page = await initPage();
     status = await page.open(baseUrl + ninSearchPath);
   }
 
@@ -167,10 +170,14 @@ module.exports.fetchNinData = async (nin) => {
     return null;
   }
 
-  const result = parsers.parseNinResult(await page.property('content'));
-  result.provider = module.exports.name;
-  result.nin = nin;
-  return result;
+  try {
+    const result = parsers.parseNinResult(await page.property('content'));
+    result.provider = module.exports.name;
+    result.nin = nin;
+    return result;
+  } finally {
+    page.close();
+  }
 };
 
 module.exports.name = 'nibss';
