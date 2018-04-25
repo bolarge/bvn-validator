@@ -1,6 +1,8 @@
 /**
  * Created by taiwo on 6/7/16.
  */
+require('mongoose').Promise = require('bluebird');
+
 module.exports.db = {
   url: process.env.MONGODB_URL || 'mongodb://localhost:27017/bvn_service'
 };

@@ -8,7 +8,7 @@
 
 "use strict";
 
-const mongoose = require('../services/connection').mongoose,
+const mongoose = require('mongoose'),
   debug = require('debug')('db'),
   config = require('../../config');
 
