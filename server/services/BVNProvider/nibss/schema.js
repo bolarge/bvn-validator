@@ -15,7 +15,7 @@ const bvnSchema = {
 
 const ninSchema = {
   'FIRST NAME': 'firstName',
-  'MIDDLE NAME': 'otherNames',
+  'MIDDLE NAME': 'middleName',
   'LAST NAME': 'lastName',
   'MAIDEN NAME': 'maidenName',
   'BIRTH DATE': 'dob',

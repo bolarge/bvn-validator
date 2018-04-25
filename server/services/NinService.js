@@ -3,20 +3,26 @@
  */
 
 const BvnCache = require('../models/BvnCache');
-const NIBSS  = require('./BVNProvider/nibss');
+const NinCache = require('../models/NinCache');
+const NIBSS = require('./BVNProvider/nibss');
 
-module.exports.fetchNin = (bvn) => {
-  return BvnCache.getCachedResult({bvn})
-    .then(function(result) {
-      if (result && result.nin) {
-        return result;
-      }
-      return NIBSS.resolve(bvn)
-        .then((response) => {
-          if (response) {
-            BvnCache.saveResult({bvn}, response);
-          }
-          return response;
-        });
-    })
+module.exports.fetchNinData = async (nin, forceReload = false) => {
+  if (!forceReload) {
+    const cachedNin = await NinCache.getCachedResult(nin);
+    if (!!cachedNin) {
+      return cachedNin;
+    }
+
+    const cachedBvn = await BvnCache.findOne({nin});
+    if (!!cachedBvn) {
+      return cachedBvn;
+    }
+  }
+
+  const ninData = await NIBSS.fetchNinData(nin);
+  if (!!ninData) {
+    NinCache.saveResult(ninData);
+  }
+
+  return ninData;
 };

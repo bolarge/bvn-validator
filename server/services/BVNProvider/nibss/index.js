@@ -171,6 +171,7 @@ module.exports.fetchNinData = async (nin) => {
 
   const result = parsers.parseNinResult(await page.property('content'));
   result.provider = module.exports.name;
+  result.nin = nin;
   return result;
 };
 
