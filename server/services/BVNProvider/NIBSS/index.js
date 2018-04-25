@@ -137,6 +137,7 @@ const parseResult = async (content) => {
   result.bvn = items[1].cells[2].textContent.trim();
   result.img = img.src;
 
+  result.provider = module.exports.name;
   return result;
 };
 
@@ -194,3 +195,5 @@ module.exports.resolve = async (bvn) => {
 
   return parseResult(await page.property('content'));
 };
+
+module.exports.name = 'nibss';

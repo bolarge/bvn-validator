@@ -57,3 +57,5 @@ module.exports.paystack = {
   baseUrl: process.env.PAYSTACK_BASE_URL || 'https://api.paystack.co',
   authSecret: process.env.PAYSTACK_SECRET || ''
 };
+
+module.exports.activeBvnProvider = process.env.ACTIVE_BVN_PROVIDER || 'nibss';

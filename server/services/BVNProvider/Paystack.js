@@ -17,7 +17,7 @@ module.exports.resolve = (bvn) => {
 
   return rp(options)
     .then((response) => {
-      response.provider = 'paystack';
+      response.provider = module.exports.name;
       const data = response.data;
       if (!respone.status) {
         return null;
@@ -38,3 +38,6 @@ module.exports.resolve = (bvn) => {
       throw new Error(err.message);
     });
 };
+
+
+module.exports.name = 'paystack';
