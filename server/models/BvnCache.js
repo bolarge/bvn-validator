@@ -18,17 +18,46 @@ var mongoose = require('mongoose'), debug = require('debug')('db'),
 
 
 var storeSchema = mongoose.Schema({
-  hash: {
+  bvn: {
     type: String,
     unique: true,
     required: true
   },
-  request: {
-    type: Object
+  firstName: {
+    type: String,
+    required: true
   },
-  result: {
-    type: Object
+  lastName: {
+    type: String,
+    required: true
   },
+  otherNames: {
+    type: String
+  },
+  nin: {
+    type: String
+  },
+  dob: {
+    type: String,
+    required: true
+  },
+  registrationDate: {
+    type: String
+  },
+  provider: {
+    type: String,
+    required: true
+  },
+  enrollmentBranch: {
+    type: String
+  },
+  enrollmentInstitution: {
+    type: String
+  },
+  img: {
+    type: String
+  },
+  extra: {type: Object},
   createdAt: {
     type: Date,
     default: Date.now
@@ -38,30 +67,18 @@ var storeSchema = mongoose.Schema({
 
 var BvnCache = mongoose.model('BvnCache', storeSchema);
 
-var preprocess = function (request) {
-  var out = {};
-  for (var i in request) {
-    if (request.hasOwnProperty(i)) {
-      out[i] = _.isString(request[i]) ? _.upperCase(request[i]) : request[i];
-    }
-  }
-
-  return out;
-};
 
 module.exports = BvnCache;
 
-module.exports.getCachedResult = function (request) {
-  request = preprocess(request);
-  var hash = objectHash(request);
+module.exports.getCachedResult = function (bvn) {
 
   var deferred = q.defer();
 
-  BvnCache.findOne({hash: hash}, function (err, cached) {
+  BvnCache.findOne({bvn: bvn}, function (err, cached) {
     if (err) {
       deferred.reject(err);
     } else {
-      deferred.resolve(cached ? cached.result : null);
+      deferred.resolve(cached ? cached : null);
     }
   });
 
@@ -69,15 +86,9 @@ module.exports.getCachedResult = function (request) {
 };
 
 
-module.exports.saveResult = function (request, result) {
-  request = preprocess(request);
-  var hash = objectHash(request);
+module.exports.saveResult = function (result) {
   var deferred = q.defer();
-  var resultCaching = new BvnCache({
-    hash: hash,
-    request: request,
-    result: result
-  });
+  var resultCaching = new BvnCache(result);
 
   resultCaching.save(function (err) {
     if (err) {

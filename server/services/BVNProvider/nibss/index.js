@@ -7,11 +7,11 @@ const Promise = require('bluebird');
 const schema = require('./schema');
 const moment = require('moment');
 const config = require('../../../../config');
-const TIMEOUT_SECONDS = config.nibss.portalTimeout; // Seconds per page load
+const TIMEOUT_SECONDS = config.nibss.portal.timeout; // Seconds per page load
 
 
 
-const baseUrl = config.nibss.portalBaseUrl;
+const baseUrl = config.nibss.portal.baseUrl;
 const searchPath = '/bvnnbo/bank/user/search';
 
 
@@ -81,8 +81,8 @@ const doLogin = async (page) => {
     loginForm.elements['password'].value = params.password;
     document.createElement('form').submit.call(loginForm);
   }, {
-    username: config.nibss.portalUser,
-    password: config.nibss.portalPassword
+    username: config.nibss.portal.user,
+    password: config.nibss.portal.password
   });
 
   return page;

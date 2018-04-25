@@ -30,10 +30,12 @@ module.exports.nibss = {
     channelCode: process.env.NIP_CHANNEL_CODE || "8",
     wsdl: process.env.NIP_WSDL || 'http://196.6.103.10:86/NIPWS/NIPInterface?wsdl'
   },
-  portalBaseUrl: process.env.NIBSS_PORTAL_URL || 'https://bvnvalidationportal.nibss-plc.com.ng',
-  portalUser: process.env.NIBSS_USERNAME || '',
-  portalPassword: process.env.NIBSS_PASSWORD || '',
-  portalTimeout: parseInt(process.env.NIBSS_PORTAL_TIMEOUT_SECONDS) || 60
+  portal: {
+    baseUrl: process.env.NIBSS_PORTAL_URL || 'https://bvnvalidationportal.nibss-plc.com.ng',
+    user: process.env.NIBSS_USERNAME || '',
+    password: process.env.NIBSS_PASSWORD || '',
+    timeout: parseInt(process.env.NIBSS_PORTAL_TIMEOUT_SECONDS) || 60
+  }
 };
 
 module.exports.authentication = {

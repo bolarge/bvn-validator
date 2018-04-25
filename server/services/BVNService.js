@@ -3,7 +3,7 @@
  */
 const BvnCache = require('../models/BvnCache');
 const Paystack = require('./BVNProvider/Paystack');
-const NIBSS  = require('./BVNProvider/NIBSS');
+const NIBSS  = require('./BVNProvider/nibss');
 const cfg = require('../../config');
 
 
@@ -15,18 +15,27 @@ const getProvider = () => {
   return NIBSS;
 };
 
-module.exports.resolve = (bvn) => {
-  return BvnCache.getCachedResult({bvn})
+const getBvnInfo = (bvn) => {
+  return getProvider().resolve(bvn)
+    .then((response) => {
+      if (response) {
+        BvnCache.saveResult(response);
+      }
+      return response;
+    })
+};
+
+module.exports.resolve = (bvn, forceReload = false) => {
+
+  if (forceReload) {
+    return getBvnInfo(bvn);
+  }
+
+  return BvnCache.getCachedResult(bvn)
     .then(function(result) {
       if (result) {
         return result;
       }
-      return getProvider().resolve(bvn)
-        .then((response) => {
-          if (response) {
-            BvnCache.saveResult({bvn}, response);
-          }
-          return response;
-        });
+      return getBvnInfo(bvn);
     })
 };

@@ -218,15 +218,16 @@ module.exports.resolveBvn = function (req, res) {
   if (!req.params.bvn) {
     return res.status(400).send("No BVN to resolve.");
   }
-  BVNService.resolve(req.params.bvn)
+  const forceReload = req.query.forceReload === '1';
+  BVNService.resolve(req.params.bvn, forceReload)
     .then(function(result) {
       if (!result) {
-        return res.status(404).send("BVN not found")
+        return res.status(404).json({message: "BVN not found"})
       }
       res.json(result)
     })
     .catch(function(err) {
-      res.status(500).send(err.message);
+      res.status(500).json(err);
     })
 
 };
