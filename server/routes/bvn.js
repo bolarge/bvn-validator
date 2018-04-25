@@ -23,4 +23,9 @@ module.exports = function (app) {
     require('passport').authenticate('basic', {session: false}),
     BvnController.validateBoolean
   );
+
+  app.get("/oapi/resolveBvn/:bvn",
+    require('passport').authenticate('basic', {session: false}),
+    BvnController.resolveBvn
+  );
 };
