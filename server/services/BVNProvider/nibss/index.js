@@ -54,12 +54,12 @@ const isResultNotFoundPage = async (page) => {
 
 
 const pageLoad = async (page, isCond, errorMessage, checks = 0) => {
-  if (await isCond(page)) {
-    return true;
-  }
-  if (checks < TIMEOUT_SECONDS * 2) {
-    return Promise.delay(500)
-      .then(() => pageLoad(page, isCond, errorMessage, ++checks));
+  while (checks < TIMEOUT_SECONDS * 2) {
+    await Promise.delay(500);
+    ++checks;
+    if (await isCond(page)) {
+      return page;
+    }
   }
 
   console.log(await page.property('content'));
@@ -84,8 +84,7 @@ const doLogin = async (page) => {
     password: config.nibss.portal.password
   });
 
-  await pageLoad(page, isSearchPage, 'Could not log into portal');
-  return page;
+  return await pageLoad(page, isSearchPage, 'Could not log into portal');
 };
 
 
@@ -101,8 +100,7 @@ const doSearch = async (page, params) => {
     HTMLFormElement.prototype.submit.call(form);
   }, params);
 
-  await pageLoad(page, isResultPage);
-  return page;
+  return await pageLoad(page, isResultPage);
 };
 
 
