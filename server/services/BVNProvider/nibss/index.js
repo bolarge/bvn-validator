@@ -68,6 +68,15 @@ const doBvnSearch = async (page, params) => {
 };
 
 
+const doPageLoad = async (page, url) => {
+  await page.evaluate(function(url) {
+    window.location = url;
+  }, url);
+
+  return await pageLoad(page, PageChecker.isNimcPage, 'Could not load NIN search page');
+};
+
+
 const doNinSearch = async (page, params) => {
   const result = await page.evaluate(function (params) {
     // Page context
@@ -149,19 +158,16 @@ module.exports.fetchNinData = async (nin) => {
 
   let page = await initPage();
   let status = await page.open(baseUrl + ninSearchPath);
+  if (status !== 'success') {
+    throw new Error('Could not connect to portal, ' + status)
+  }
+
 
   if (await PageChecker.isLoginPage(page)) {
     console.log("------Login page-----", new Date());
     console.log('Doing log in');
     page = await doLogin(page);
-    // Re Init page to prevent page.open failure
-    page.close();
-    page = await initPage();
-    status = await page.open(baseUrl + ninSearchPath);
-  }
-
-  if (status !== 'success') {
-    throw new Error('Could not connect to portal, ' + status)
+   await doPageLoad(page, baseUrl + ninSearchPath)
   }
 
   page = await doNinSearch(page, {nin});
