@@ -2,56 +2,19 @@
  * Created by nonami on 24/04/2018.
  */
 const phantom = require('phantom');
-const {JSDOM} = require('jsdom');
 const Promise = require('bluebird');
-const schema = require('./schema');
-const moment = require('moment');
+const PageChecker = require('./pageChecker');
+const parsers = require('./parsers');
 const config = require('../../../../config');
 const TIMEOUT_SECONDS = config.nibss.portal.timeout; // Seconds per page load
 
 
-
 const baseUrl = config.nibss.portal.baseUrl;
-const searchPath = '/bvnnbo/bank/user/search';
+const bvnSearchPath = '/bvnnbo/bank/user/search';
+const ninSearchPath = '/bvnnbo/bank/user/nimc';
 
 
-let phantomInstance, pageInstance;
-
-
-const isLoginPage = async (page) => {
-  const jsDom = new JSDOM(await page.property('content'));
-  const el = jsDom.window.document.querySelector('input[name="username"]');
-  return !!el;
-};
-
-const isSearchPage = async (page) => {
-  const content  = await page.property('content');
-  const jsDom = new JSDOM(await page.property('content'));
-  const el = jsDom.window.document.querySelector('form[action="/bvnnbo/bank/user/search"]');
-  return !!el;
-};
-
-const isResultPage = async (page) => {
-
-  if (await isResultNotFoundPage(page)) {
-    return true;
-  }
-
-  const jsDom = new JSDOM(await page.property('content'));
-  const div = jsDom.window.document.getElementById('no-more-tables');
-  if (!div) {
-    return false;
-  }
-
-  const tbl = div.querySelector('table');
-  return !!tbl;
-};
-
-
-const isResultNotFoundPage = async (page) => {
-  const content = await page.property('content');
-  return /No results found/i.test(content) || /Invalid BVN/i.test(content);
-};
+let phantomInstance;
 
 
 const pageLoad = async (page, isCond, errorMessage, checks = 0) => {
@@ -89,7 +52,7 @@ const doLogin = async (page) => {
 };
 
 
-const doSearch = async (page, params) => {
+const doBvnSearch = async (page, params) => {
   const result = await page.evaluate(function (params) {
     // Page context
     var form = document.querySelector('form[action="/bvnnbo/bank/user/search"]');
@@ -104,68 +67,48 @@ const doSearch = async (page, params) => {
 };
 
 
-const isDateData = (dataKey) => {
-  return ['registrationDate', 'dob'].includes(dataKey);
-};
-
-const parseResult = async (content) => {
-  const map = new Map();
-  Object.keys(schema).forEach(key => {
-    map.set(key, schema[key]);
-  });
-
-  const result = {};
-  const jsDom = new JSDOM(content);
-  const div = jsDom.window.document.getElementById('no-more-tables');
-  if (!div) {
-    return false;
-  }
-  const tbl = div.querySelector('table');
-  const items = tbl.rows;
-  console.log(items.length);
-  for (let i = 2; i < items.length - 1; i++) {
-    const cells = items[i].cells;
-    const key = map.get(cells[0].textContent.trim());
-    let content = cells[1].textContent.trim();
-    if (isDateData(key)) {
-      content = moment(content, "DD-MMM-YY").format('YYYY-MM-DD');
+const doNinSearch =  async (page, params) => {
+  const result = await page.evaluate(function (params) {
+    // Page context
+    var form = document.querySelector('form[action="/bvnnbo/bank/user/nimc"]');
+    if (!form) {
+      console.error("No search form found");
+      return;
     }
-    result[key] = content;
-  }
-
-  const img = tbl.querySelector('img');
-  result.bvn = items[1].cells[2].textContent.trim();
-  result.img = img.src;
-
-  result.provider = module.exports.name;
-  return result;
+    form.elements['idNo'].value = params.nin;
+    document.createElement('form').submit.call(form);
+  }, params);
+  return page;
 };
-
 
 const initPage = async () => {
-  if (!phantomInstance || !pageInstance) {
-
+  let pageInstance;
+  if (!phantomInstance) {
+    console.log('Creating instance', new Date());
     phantomInstance = await phantom.create();
-    pageInstance = await phantomInstance.createPage();
-
-    pageInstance.property('onConfirm', function () {
-      return true;
-    });
-
-    pageInstance.property("onResourceTimeout", function (err) {
-      console.error(JSON.stringify(err));
-    });
-
-    pageInstance.property('onError', function (msg, trace) {
-      const msgStack = [msg];
-      trace.forEach(function (err) {
-        msgStack.push(' -> ' + err.file + ': ' + err.line + (err.function ? ' (in function "' + err.function + '")' : ''));
-      });
-      console.error(msgStack.join('\n'));
-    });
-
-    pageInstance.setting("resourceTimeout", TIMEOUT_SECONDS * 1000);
   }
+  console.log('Creating page', new Date());
+  pageInstance = await phantomInstance.createPage();
+
+  pageInstance.property('onConfirm', function () {
+    return true;
+  });
+
+  pageInstance.property("onResourceTimeout", function (err) {
+    console.error(JSON.stringify(err));
+  });
+
+  pageInstance.property('onError', function (msg, trace) {
+    const msgStack = [msg];
+    trace.forEach(function (err) {
+      msgStack.push(' -> ' + err.file + ': ' + err.line + (err.function ? ' (in function "' + err.function + '")' : ''));
+    });
+    console.error(msgStack.join('\n'));
+  });
+
+  pageInstance.setting("resourceTimeout", TIMEOUT_SECONDS * 1000);
+  console.log('Ending init', new Date());
+
   return pageInstance;
 };
 
@@ -173,27 +116,59 @@ const initPage = async () => {
 module.exports.resolve = async (bvn) => {
 
   let page = await initPage();
-  const status = await page.open(baseUrl + searchPath);
+  const status = await page.open(baseUrl + bvnSearchPath);
 
   if (status !== 'success') {
     throw new Error('Could not connect to portal, ' + status)
   }
 
-  if (await isLoginPage(page)) {
+  if (await PageChecker.isLoginPage(page)) {
     console.log("------Login page-----", new Date());
     console.log('Doing log in');
     page = await doLogin(page);
-    await pageLoad(page, isSearchPage, 'Could not log into portal');
+    await pageLoad(page, PageChecker.isSearchPage, 'Could not log into portal');
   }
 
-  page = await doSearch(page, {bvn});
-  await pageLoad(page, isResultPage);
+  page = await doBvnSearch(page, {bvn});
+  await pageLoad(page, PageChecker.isResultPage);
 
-  if (await isResultNotFoundPage(page)) {
+  if (await PageChecker.isResultNotFoundPage(page)) {
     return null;
   }
 
-  return parseResult(await page.property('content'));
+  const result = parsers.parseBvnResult(await page.property('content'));
+  result.provider = module.exports.name;
+  return result;
+};
+
+
+module.exports.fetchNinData = async (nin) => {
+
+  let page = await initPage();
+  let status = await page.open(baseUrl + ninSearchPath);
+
+  if (await PageChecker.isLoginPage(page)) {
+    console.log("------Login page-----", new Date());
+    console.log('Doing log in');
+    page = await doLogin(page);
+    await pageLoad(page, PageChecker.isLoggedInPage, 'Could not log into portal');
+    status = await page.open(baseUrl + ninSearchPath);
+  }
+
+  if (status !== 'success') {
+    throw new Error('Could not connect to portal, ' + status)
+  }
+
+  page = await doNinSearch(page, {nin});
+  await pageLoad(page, PageChecker.isResultPage);
+
+  if (await PageChecker.isResultNotFoundPage(page)) {
+    return null;
+  }
+
+  const result = parsers.parseNinResult(await page.property('content'));
+  result.provider = module.exports.name;
+  return result;
 };
 
 module.exports.name = 'nibss';
