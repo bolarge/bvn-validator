@@ -216,7 +216,7 @@ module.exports.validateBoolean = function (req, res) {
 
 module.exports.resolveBvn = function (req, res) {
   if (!req.params.bvn) {
-    return res.status(400).send("No BVN to resolve.");
+    return res.status(400).json({message: "No BVN to resolve."});
   }
   const forceReload = req.query.forceReload === '1';
   BVNService.resolve(req.params.bvn, forceReload)
