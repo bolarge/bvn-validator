@@ -1,7 +1,7 @@
 /**
  * Created by nonami on 24/04/2018.
  */
-var schema = {
+const bvnSchema = {
   'REGISTRATION DATE':'registrationDate',
   'FIRST NAME':'firstName',
   'MIDDLE NAME':'middleName',
@@ -13,4 +13,16 @@ var schema = {
   'ENROLLMENT INSTITUTION':'enrollmentInstitution',
 };
 
-module.exports = schema;
+const ninSchema = {
+  'FIRST NAME': 'firstName',
+  'MIDDLE NAME': 'middleName',
+  'LAST NAME': 'lastName',
+  'MAIDEN NAME': 'maidenName',
+  'BIRTH DATE': 'dob',
+  'PHONE': 'phoneNumber',
+  'GENDER': 'gender',
+};
+
+module.exports.bvnSchema = bvnSchema;
+
+module.exports.ninSchema = ninSchema;
