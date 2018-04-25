@@ -7,6 +7,7 @@ const PageChecker = require('./pageChecker');
 const parsers = require('./parsers');
 const config = require('../../../../config');
 const TIMEOUT_SECONDS = config.nibss.portal.timeout; // Seconds per page load
+const moment = require('moment');
 
 
 const baseUrl = config.nibss.portal.baseUrl;
@@ -42,12 +43,13 @@ const doLogin = async (page) => {
     }
     loginForm.elements['username'].value = params.username;
     loginForm.elements['password'].value = params.password;
-    document.createElement('form').submit.call(loginForm);
+    HTMLFormElement.prototype.submit.call(loginForm);
   }, {
     username: config.nibss.portal.user,
     password: config.nibss.portal.password
   });
 
+  await pageLoad(page, PageChecker.isSearchPage, 'Could not log into portal');
   return page;
 };
 
@@ -61,8 +63,10 @@ const doBvnSearch = async (page, params) => {
       return;
     }
     form.elements['bvn'].value = params.bvn;
-    document.createElement('form').submit.call(form);
+    HTMLFormElement.prototype.submit.call(form);
   }, params);
+
+  await pageLoad(page, PageChecker.isResultPage);
   return page;
 };
 
@@ -76,41 +80,42 @@ const doNinSearch =  async (page, params) => {
       return;
     }
     form.elements['idNo'].value = params.nin;
-    document.createElement('form').submit.call(form);
+    HTMLFormElement.prototype.submit.call(form);
   }, params);
   return page;
 };
 
 const initPage = async () => {
-  let pageInstance;
-  if (!phantomInstance) {
-    console.log('Creating instance', new Date());
-    phantomInstance = await phantom.create();
-  }
-  console.log('Creating page', new Date());
-  pageInstance = await phantomInstance.createPage();
+    if (!phantomInstance) {
+      console.log('Creating instance', moment().format());
+      phantomInstance = await phantom.create();
+    }
 
-  pageInstance.property('onConfirm', function () {
-    return true;
-  });
+    console.log('Creating page', moment().format());
+    let pageInstance = await phantomInstance.createPage();
 
-  pageInstance.property("onResourceTimeout", function (err) {
-    console.error(JSON.stringify(err));
-  });
-
-  pageInstance.property('onError', function (msg, trace) {
-    const msgStack = [msg];
-    trace.forEach(function (err) {
-      msgStack.push(' -> ' + err.file + ': ' + err.line + (err.function ? ' (in function "' + err.function + '")' : ''));
+    pageInstance.on('onConfirm', function () {
+      return true;
     });
-    console.error(msgStack.join('\n'));
-  });
 
-  pageInstance.setting("resourceTimeout", TIMEOUT_SECONDS * 1000);
-  console.log('Ending init', new Date());
+    pageInstance.on("onResourceTimeout", function (err) {
+      console.error(JSON.stringify(err));
+    });
 
-  return pageInstance;
-};
+    pageInstance.on('onError', function (msg, trace) {
+      const msgStack = [msg];
+      trace.forEach(function (err) {
+        msgStack.push(' -> ' + err.file + ': ' + err.line + (err.function ? ' (in function "' + err.function + '")' : ''));
+      });
+      console.error(msgStack.join('\n'));
+    });
+
+    pageInstance.setting("resourceTimeout", TIMEOUT_SECONDS * 1000);
+
+    console.log('Init complete', moment().format());
+    return pageInstance;
+  }
+;
 
 
 module.exports.resolve = async (bvn) => {
@@ -126,19 +131,19 @@ module.exports.resolve = async (bvn) => {
     console.log("------Login page-----", new Date());
     console.log('Doing log in');
     page = await doLogin(page);
-    await pageLoad(page, PageChecker.isSearchPage, 'Could not log into portal');
   }
 
-  page = await doBvnSearch(page, {bvn});
-  await pageLoad(page, PageChecker.isResultPage);
-
-  if (await PageChecker.isResultNotFoundPage(page)) {
-    return null;
+  try {
+    page = await doBvnSearch(page, {bvn});
+    if (await PageChecker.isResultNotFoundPage(page)) {
+      return null;
+    }
+    const result =  parsers.parseBvnResult(await page.property('content'));
+    result.provider = module.exports.name;
+    return result;
+  } finally {
+    page.close();
   }
-
-  const result = parsers.parseBvnResult(await page.property('content'));
-  result.provider = module.exports.name;
-  return result;
 };
 
 
@@ -151,7 +156,6 @@ module.exports.fetchNinData = async (nin) => {
     console.log("------Login page-----", new Date());
     console.log('Doing log in');
     page = await doLogin(page);
-    await pageLoad(page, PageChecker.isLoggedInPage, 'Could not log into portal');
     status = await page.open(baseUrl + ninSearchPath);
   }
 
@@ -160,7 +164,6 @@ module.exports.fetchNinData = async (nin) => {
   }
 
   page = await doNinSearch(page, {nin});
-  await pageLoad(page, PageChecker.isResultPage);
 
   if (await PageChecker.isResultNotFoundPage(page)) {
     return null;

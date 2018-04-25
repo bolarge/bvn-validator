@@ -8,16 +8,12 @@
 
 "use strict";
 
-var mongoose = require('mongoose'), debug = require('debug')('db'),
-  bcrypt = require('bcrypt'),
-  config = require('../../config'),
-  _ = require('lodash'),
-  objectHash = require('object-hash'),
-  q = require('q')
-;
+const mongoose = require('../services/connection').mongoose,
+  debug = require('debug')('db'),
+  config = require('../../config');
 
 
-var storeSchema = mongoose.Schema({
+let storeSchema = mongoose.Schema({
   bvn: {
     type: String,
     unique: true,
@@ -31,7 +27,7 @@ var storeSchema = mongoose.Schema({
     type: String,
     required: true
   },
-  otherNames: {
+  middleName: {
     type: String
   },
   nin: {
@@ -65,41 +61,22 @@ var storeSchema = mongoose.Schema({
 });
 
 
-var BvnCache = mongoose.model('BvnCache', storeSchema);
+let BvnCache = mongoose.model('BvnCache', storeSchema);
 
 
 module.exports = BvnCache;
 
 module.exports.getCachedResult = function (bvn) {
-
-  var deferred = q.defer();
-
-  BvnCache.findOne({bvn: bvn}, function (err, cached) {
-    if (err) {
-      deferred.reject(err);
-    } else {
-      deferred.resolve(cached ? cached : null);
-    }
-  });
-
-  return deferred.promise;
+  return BvnCache.findOne({bvn: bvn})
 };
 
 
 module.exports.saveResult = function (result) {
-  var deferred = q.defer();
-  var resultCaching = new BvnCache(result);
-
-  resultCaching.save(function (err) {
-    if (err) {
-      deferred.reject(err);
-    } else {
-      deferred.resolve(resultCaching);
-    }
-  });
-
-  return deferred.promise;
+  return BvnCache.findOneAndUpdate({bvn: result.bvn}, {$set: result}, {upsert: true})
+    .then((r) => {
+      return r;
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 };
-
-
-
