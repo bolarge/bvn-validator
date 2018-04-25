@@ -4,7 +4,7 @@
 var schema = {
   'REGISTRATION DATE':'registrationDate',
   'FIRST NAME':'firstName',
-  'MIDDLE NAME':'otherNames',
+  'MIDDLE NAME':'middleName',
   'LAST NAME':'lastName',
   'BIRTH DATE':'dob',
   'PHONE':'phoneNumber',

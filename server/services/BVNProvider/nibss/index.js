@@ -10,12 +10,11 @@ const config = require('../../../../config');
 const TIMEOUT_SECONDS = config.nibss.portal.timeout; // Seconds per page load
 
 
-
 const baseUrl = config.nibss.portal.baseUrl;
 const searchPath = '/bvnnbo/bank/user/search';
 
 
-let phantomInstance, pageInstance;
+let phantomInstance;
 
 
 const isLoginPage = async (page) => {
@@ -25,7 +24,7 @@ const isLoginPage = async (page) => {
 };
 
 const isSearchPage = async (page) => {
-  const content  = await page.property('content');
+  const content = await page.property('content');
   const jsDom = new JSDOM(await page.property('content'));
   const el = jsDom.window.document.querySelector('form[action="/bvnnbo/bank/user/search"]');
   return !!el;
@@ -79,12 +78,13 @@ const doLogin = async (page) => {
     }
     loginForm.elements['username'].value = params.username;
     loginForm.elements['password'].value = params.password;
-    document.createElement('form').submit.call(loginForm);
+    HTMLFormElement.prototype.submit.call(loginForm);
   }, {
     username: config.nibss.portal.user,
     password: config.nibss.portal.password
   });
 
+  await pageLoad(page, isSearchPage, 'Could not log into portal');
   return page;
 };
 
@@ -98,8 +98,10 @@ const doSearch = async (page, params) => {
       return;
     }
     form.elements['bvn'].value = params.bvn;
-    document.createElement('form').submit.call(form);
+    HTMLFormElement.prototype.submit.call(form);
   }, params);
+
+  await pageLoad(page, isResultPage);
   return page;
 };
 
@@ -143,20 +145,23 @@ const parseResult = async (content) => {
 
 
 const initPage = async () => {
-  if (!phantomInstance || !pageInstance) {
+    if (!phantomInstance) {
+      console.log('Creating instance', moment().format());
+      phantomInstance = await phantom.create();
+    }
 
-    phantomInstance = await phantom.create();
-    pageInstance = await phantomInstance.createPage();
+    console.log('Creating page', moment().format());
+    let pageInstance = await phantomInstance.createPage();
 
-    pageInstance.property('onConfirm', function () {
+    pageInstance.on('onConfirm', function () {
       return true;
     });
 
-    pageInstance.property("onResourceTimeout", function (err) {
+    pageInstance.on("onResourceTimeout", function (err) {
       console.error(JSON.stringify(err));
     });
 
-    pageInstance.property('onError', function (msg, trace) {
+    pageInstance.on('onError', function (msg, trace) {
       const msgStack = [msg];
       trace.forEach(function (err) {
         msgStack.push(' -> ' + err.file + ': ' + err.line + (err.function ? ' (in function "' + err.function + '")' : ''));
@@ -165,9 +170,11 @@ const initPage = async () => {
     });
 
     pageInstance.setting("resourceTimeout", TIMEOUT_SECONDS * 1000);
+
+    console.log('Init complete', moment().format());
+    return pageInstance;
   }
-  return pageInstance;
-};
+;
 
 
 module.exports.resolve = async (bvn) => {
@@ -183,17 +190,17 @@ module.exports.resolve = async (bvn) => {
     console.log("------Login page-----", new Date());
     console.log('Doing log in');
     page = await doLogin(page);
-    await pageLoad(page, isSearchPage, 'Could not log into portal');
   }
 
-  page = await doSearch(page, {bvn});
-  await pageLoad(page, isResultPage);
-
-  if (await isResultNotFoundPage(page)) {
-    return null;
+  try {
+    page = await doSearch(page, {bvn});
+    if (await isResultNotFoundPage(page)) {
+      return null;
+    }
+    return parseResult(await page.property('content'));
+  } finally {
+    page.close();
   }
-
-  return parseResult(await page.property('content'));
 };
 
 module.exports.name = 'nibss';
