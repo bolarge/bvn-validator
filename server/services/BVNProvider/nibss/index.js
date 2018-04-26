@@ -12,7 +12,7 @@ const moment = require('moment');
 
 const baseUrl = config.nibss.portal.baseUrl;
 const bvnSearchPath = '/bvnnbo/bank/user/search';
-const ninSearchPath = '/bvnnbo/bank/user/nimc';
+const nimcSearchPath = '/bvnnbo/bank/user/nimc';
 
 
 let phantomInstance;
@@ -69,15 +69,15 @@ const doBvnSearch = async (page, params) => {
 
 
 const doPageLoad = async (page, url) => {
-  await page.evaluate(function(url) {
+  await page.evaluate(function (url) {
     window.location = url;
   }, url);
 
-  return await pageLoad(page, PageChecker.isNimcPage, 'Could not load NIN search page');
+  return await pageLoad(page, PageChecker.isNimcPage, 'Could not load NIMC search page');
 };
 
 
-const doNinSearch = async (page, params) => {
+const doNimcSearch = async (page, params) => {
   const result = await page.evaluate(function (params) {
     // Page context
     var form = document.querySelector('form[action="/bvnnbo/bank/user/nimc"]');
@@ -85,11 +85,14 @@ const doNinSearch = async (page, params) => {
       console.error("No search form found");
       return;
     }
-    form.elements['idNo'].value = params.nin;
+    form.elements['idNo'].value = params.idNumber;
+    if (params.idType === 'documentNo') {
+      form.elements['type'].value = '1';
+    }
     HTMLFormElement.prototype.submit.call(form);
   }, params);
 
-  return await pageLoad(page, PageChecker.isResultPage);
+  return await pageLoad(page, PageChecker.isResultPage, "Search Failed, portal down?");
 };
 
 const initPage = async () => {
@@ -115,6 +118,10 @@ const initPage = async () => {
         msgStack.push(' -> ' + err.file + ': ' + err.line + (err.function ? ' (in function "' + err.function + '")' : ''));
       });
       console.error(msgStack.join('\n'));
+    });
+
+    pageInstance.on('onConsoleMessage', function (msg) {
+      console.info(msg);
     });
 
     pageInstance.setting("resourceTimeout", TIMEOUT_SECONDS * 1000);
@@ -154,10 +161,10 @@ module.exports.resolve = async (bvn) => {
 };
 
 
-module.exports.fetchNinData = async (nin) => {
+module.exports.fetchNimcData = async (idNumber, idType) => {
 
   let page = await initPage();
-  let status = await page.open(baseUrl + ninSearchPath);
+  let status = await page.open(baseUrl + nimcSearchPath);
   if (status !== 'success') {
     throw new Error('Could not connect to portal, ' + status)
   }
@@ -167,19 +174,21 @@ module.exports.fetchNinData = async (nin) => {
     console.log("------Login page-----", new Date());
     console.log('Doing log in');
     page = await doLogin(page);
-   await doPageLoad(page, baseUrl + ninSearchPath)
+    await doPageLoad(page, baseUrl + nimcSearchPath)
   }
 
-  page = await doNinSearch(page, {nin});
+  // const idType =  idNumber.length === 11 ? 'nin' : 'documentNo';
+  page = await doNimcSearch(page, {idNumber, idType});
 
   if (await PageChecker.isResultNotFoundPage(page)) {
     return null;
   }
 
   try {
-    const result = parsers.parseNinResult(await page.property('content'));
+    const result = parsers.parseNimcResult(await page.property('content'));
     result.provider = module.exports.name;
-    result.nin = nin;
+    result.idNumber = idNumber;
+    result.idType = idType;
     return result;
   } finally {
     page.close();

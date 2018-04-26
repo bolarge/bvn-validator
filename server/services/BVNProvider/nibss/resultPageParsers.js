@@ -45,7 +45,7 @@ module.exports.parseBvnResult = (content) => {
 };
 
 
-module.exports.parseNinResult = (content) => {
+module.exports.parseNimcResult = (content) => {
   const map = new Map();
   Object.keys(ninSchema).forEach(key => {
     map.set(key, ninSchema[key]);
