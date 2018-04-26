@@ -1,6 +1,8 @@
 /**
  * Created by taiwo on 6/7/16.
  */
+require('mongoose').Promise = require('bluebird');
+
 module.exports.db = {
   url: process.env.MONGODB_URL || 'mongodb://localhost:27017/bvn_service'
 };
@@ -29,6 +31,12 @@ module.exports.nibss = {
     schemeCode: process.env.NIP_SCHEME_CODE || "999061",
     channelCode: process.env.NIP_CHANNEL_CODE || "8",
     wsdl: process.env.NIP_WSDL || 'http://196.6.103.10:86/NIPWS/NIPInterface?wsdl'
+  },
+  portal: {
+    baseUrl: process.env.NIBSS_PORTAL_URL || 'https://bvnvalidationportal.nibss-plc.com.ng',
+    user: process.env.NIBSS_USERNAME || '',
+    password: process.env.NIBSS_PASSWORD || '',
+    timeout: parseInt(process.env.NIBSS_PORTAL_TIMEOUT_SECONDS) || 60
   }
 };
 
@@ -48,3 +56,10 @@ module.exports.cpos = {
   username: process.env.CPOS_USERNAME || 'user',
   password: process.env.CPOS_PASSWORD || 'password'
 };
+
+module.exports.paystack = {
+  baseUrl: process.env.PAYSTACK_BASE_URL || 'https://api.paystack.co',
+  authSecret: process.env.PAYSTACK_SECRET || ''
+};
+
+module.exports.activeBvnProvider = process.env.ACTIVE_BVN_PROVIDER || 'nibss';
