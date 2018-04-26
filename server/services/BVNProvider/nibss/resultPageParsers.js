@@ -65,7 +65,7 @@ module.exports.parseNimcResult = (content) => {
     const key = map.get(cells[0].textContent.trim());
     let content = cells[1].textContent.trim();
     if (isDateData(key)) {
-      content = moment(content, "DD-MMM-YY").format('YYYY-MM-DD');
+      content = moment(content, "DD-MM-YYYY").format('YYYY-MM-DD');
     }
     result[key] = content;
   }
