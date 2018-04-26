@@ -27,7 +27,6 @@ const pageLoad = async (page, isCond, errorMessage, checks = 0) => {
     }
   }
 
-  console.log(await page.property('content'));
   throw new Error(errorMessage || 'page time out');
 };
 
@@ -173,7 +172,7 @@ module.exports.fetchNinData = async (nin) => {
 
   page = await doNinSearch(page, {nin});
 
-  if (await PageChecker.isResultNotFoundPage(page, true)) {
+  if (await PageChecker.isResultNotFoundPage(page)) {
     return null;
   }
 
