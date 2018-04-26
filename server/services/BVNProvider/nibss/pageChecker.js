@@ -47,7 +47,7 @@ module.exports.isResultPage = async (page) => {
 };
 
 
-module.exports.isResultNotFoundPage = async (page, isNin = false) => {
+module.exports.isResultNotFoundPage = async (page) => {
   const content = await page.property('content');
   return /No results found/i.test(content)
     || /Invalid BVN/i.test(content)
