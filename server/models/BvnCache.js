@@ -30,6 +30,9 @@ let storeSchema = mongoose.Schema({
   middleName: {
     type: String
   },
+  phoneNumber: {
+    type: String
+  },
   nin: {
     type: String,
     index: true

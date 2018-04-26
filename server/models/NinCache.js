@@ -10,9 +10,13 @@ const mongoose = require('mongoose'),
 
 
 let storeSchema = mongoose.Schema({
-  nin: {
+  idNumber: {
     type: String,
     unique: true,
+    required: true
+  },
+  idType:{
+    type: String,
     required: true
   },
   firstName: {
@@ -33,6 +37,9 @@ let storeSchema = mongoose.Schema({
     type: String,
     required: true
   },
+  phoneNumber: {
+    type: String
+  },
   gender: {
     type: String
   },
@@ -52,13 +59,13 @@ let NinCache = mongoose.model('NinCache', storeSchema);
 
 module.exports = NinCache;
 
-module.exports.getCachedResult = function (nin) {
-  return NinCache.findOne({nin})
+module.exports.getCachedResult = function (idNumber) {
+  return NinCache.findOne({idNumber})
 };
 
 
 module.exports.saveResult = function (result) {
-  return NinCache.findOneAndUpdate({nin: result.nin}, {$set: result}, {upsert: true})
+  return NinCache.findOneAndUpdate({idNumber: result.idNumber}, {$set: result}, {upsert: true})
     .then((r) => {
       return r;
     })

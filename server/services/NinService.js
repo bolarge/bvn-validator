@@ -6,20 +6,23 @@ const BvnCache = require('../models/BvnCache');
 const NinCache = require('../models/NinCache');
 const NIBSS = require('./BVNProvider/nibss');
 
-module.exports.fetchNinData = async (nin, forceReload = false) => {
+module.exports.fetchNimcData = async (nin, idType, forceReload = false) => {
   if (!forceReload) {
     const cachedNin = await NinCache.getCachedResult(nin);
     if (!!cachedNin) {
       return cachedNin;
     }
 
-    const cachedBvn = await BvnCache.findOne({nin});
-    if (!!cachedBvn) {
-      return cachedBvn;
+    if (idType === 'nin') {
+      const cachedBvn = await BvnCache.findOne({nin});
+      if (!!cachedBvn) {
+        return cachedBvn;
+      }
     }
+
   }
 
-  const ninData = await NIBSS.fetchNinData(nin);
+  const ninData = await NIBSS.fetchNimcData(nin, idType);
   if (!!ninData) {
     NinCache.saveResult(ninData);
   }

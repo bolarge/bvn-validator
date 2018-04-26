@@ -4,15 +4,15 @@
 
 const NinService = require('../services/NinService');
 
-module.exports.fetchNinData = function (req, res) {
-  if (!req.params.nin) {
-    return res.status(400).json({message: "No NIN sent, please check value"});
+module.exports.fetchNimcData = function (req, res) {
+  if (!req.params.nin || !req.params.idType) {
+    return res.status(400).json({message: "No ID Number and ID type must set"});
   }
   const forceReload = req.query.forceReload === '1';
-  NinService.fetchNinData(req.params.nin, forceReload)
+  NinService.fetchNimcData(req.params.nin, req.params.idType, forceReload)
     .then(function(result) {
       if (!result) {
-        return res.status(404).json({message: "NIN not found"})
+        return res.status(404).json({message: "ID number data not found"})
       }
       res.json(result)
     })
