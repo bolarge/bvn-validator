@@ -40,7 +40,7 @@ module.exports.nibss = {
     poolConfig: {
       max: 10,
       min: 2,
-      idleTimeoutMillis: 30000,
+      idleTimeoutMillis: 180000,
       maxUses: 50
     }
   }
