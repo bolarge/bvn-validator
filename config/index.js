@@ -34,9 +34,15 @@ module.exports.nibss = {
   },
   portal: {
     baseUrl: process.env.NIBSS_PORTAL_URL || 'https://bvnvalidationportal.nibss-plc.com.ng',
-    user: process.env.NIBSS_USERNAME || '',
-    password: process.env.NIBSS_PASSWORD || '',
-    timeout: parseInt(process.env.NIBSS_PORTAL_TIMEOUT_SECONDS) || 60
+    user: process.env.NIBSS_USERNAME || 'developers@onefi.co',
+    password: process.env.NIBSS_PASSWORD || '2018@OneFi?',
+    timeout: parseInt(process.env.NIBSS_PORTAL_TIMEOUT_SECONDS) || 60,
+    poolConfig: {
+      max: 10,
+      min: 2,
+      idleTimeoutMillis: 30000,
+      maxUses: 50
+    }
   }
 };
 
