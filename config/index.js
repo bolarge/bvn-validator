@@ -1,7 +1,10 @@
 /**
  * Created by taiwo on 6/7/16.
  */
-require('mongoose').Promise = require('bluebird');
+const Bluebird = require('bluebird');
+require('mongoose').Promise = Bluebird;
+global.ES6Promise = Promise;
+global.Promise = Bluebird;
 
 module.exports.db = {
   url: process.env.MONGODB_URL || 'mongodb://localhost:27017/bvn_service'
@@ -34,8 +37,8 @@ module.exports.nibss = {
   },
   portal: {
     baseUrl: process.env.NIBSS_PORTAL_URL || 'https://bvnvalidationportal.nibss-plc.com.ng',
-    user: process.env.NIBSS_USERNAME || 'developers@onefi.co',
-    password: process.env.NIBSS_PASSWORD || '2018@OneFi?',
+    user: process.env.NIBSS_USERNAME || '',
+    password: process.env.NIBSS_PASSWORD || '',
     timeout: parseInt(process.env.NIBSS_PORTAL_TIMEOUT_SECONDS) || 60,
     poolConfig: {
       max: 10,

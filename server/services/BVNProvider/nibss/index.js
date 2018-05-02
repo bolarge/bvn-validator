@@ -50,7 +50,8 @@ const doLogin = async (page) => {
     password: config.nibss.portal.password
   });
 
-  return await pageLoad(page, PageChecker.isSearchPage, 'Could not log into portal');
+  page = await pageLoad(page, PageChecker.isSearchPage, 'Could not log into portal');
+  return await page.evaluate(() => document.cookie);
 };
 
 
@@ -161,6 +162,12 @@ module.exports.resolve = async (bvn) => {
   } finally {
     page.close();
   }
+};
+
+
+module.exports.login = async () => {
+  let page = await initPage();
+  return await doLogin(page);
 };
 
 
