@@ -30,6 +30,7 @@
     "passport": "^0.3.2",
     "passport-http": "^0.3.0",
     "phantom": "^4.0.12",
+    "phantom-pool": "^1.2.2",
     "prompt": "^1.0.0",
     "q": "^1.4.1",
     "request": "latest",

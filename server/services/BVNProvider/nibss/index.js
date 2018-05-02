@@ -8,14 +8,16 @@ const parsers = require('./resultPageParsers');
 const config = require('../../../../config');
 const TIMEOUT_SECONDS = config.nibss.portal.timeout; // Seconds per page load
 const moment = require('moment');
+const createPhantomPool = require('phantom-pool');
 
 
 const baseUrl = config.nibss.portal.baseUrl;
 const bvnSearchPath = '/bvnnbo/bank/user/search';
 const nimcSearchPath = '/bvnnbo/bank/user/nimc';
+const POOL = createPhantomPool(config.nibss.portal.poolConfig);
 
 
-let phantomInstance;
+// let phantomInstance;
 
 
 const pageLoad = async (page, isCond, errorMessage, checks = 0) => {
@@ -96,6 +98,7 @@ const doNimcSearch = async (page, params) => {
 };
 
 const initPage = async () => {
+  return POOL.use(async (phantomInstance) => {
     if (!phantomInstance) {
       console.log('Creating instance', moment().format());
       phantomInstance = await phantom.create();
@@ -128,8 +131,8 @@ const initPage = async () => {
 
     console.log('Init complete', moment().format());
     return pageInstance;
-  }
-;
+  });
+};
 
 
 module.exports.resolve = async (bvn) => {
