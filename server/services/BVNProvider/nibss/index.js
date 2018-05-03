@@ -23,15 +23,7 @@ let isLoginInProgress = false;
 
 function redirectOn302(body, response, resolveWithFullResponse) {
 
-  console.log('response code', response.statusCode);
-
-  if (response.headers['set-cookie']) {
-    cookie = response.headers['set-cookie'].join("");
-    cookie = cookie.split(";")[0];
-  }
-
   if (response.statusCode === 302) {
-    console.log(response.headers);
     // Set the new url (this is the options object)
     this.uri = isUrls(response.headers.location) ? response.headers.location : baseUrl + response.headers.location;
     this.method = 'GET';
@@ -54,12 +46,11 @@ function makeRequest(path, method, formData, cookie) {
     resolveWithFullResponse: true,
     transform: redirectOn302,
     headers: {
-      Host: 'bvnvalidationportal.nibss-plc.com.ng',
       Origin: 'https://bvnvalidationportal.nibss-plc.com.ng',
       'Content-Type': 'application/x-www-form-urlencoded',
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.3',
       Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-      Referer: 'https://bvnvalidationportal.nibss-plc.com.ng/bvnnbo/bank/user/search',
+      Referer: baseUrl + '/bvnnbo/bank/user/search',
     }
   };
 
@@ -114,20 +105,25 @@ const processLogin = async (callback) => {
         password: config.nibss.portal.password
       });
 
-      page = await pageLoad(page, PageChecker.isBvnSearchPage, 'Could not log into portal');
-      const cookieArray = await page.property('cookies');
-      if (cookieArray.length) {
-        cookie = cookieArray[0].name + '=' + cookieArray[0].value;
-      } else {
-        err = new Error('Cookie not found');
+      try {
+        page = await pageLoad(page, PageChecker.isBvnSearchPage, 'Could not log into portal');
+        const cookieArray = await page.property('cookies');
+        if (cookieArray.length) {
+          cookie = cookieArray[0].name + '=' + cookieArray[0].value;
+        } else {
+          err = new Error('Login could not be completed, no cookie found');
+        }
+      } catch (loadErr) {
+        err = loadErr;
       }
+
     }
+    isLoginInProgress = false;
     queue.forEach((cb) => {
       cb(err, cookie);
     });
 
     queue.splice(0, queue.length);
-    isLoginInProgress = false;
   }
 };
 
