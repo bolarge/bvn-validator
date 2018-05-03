@@ -194,7 +194,7 @@ module.exports.resolveBvn = async (bvn) => {
   const response = await doBvnSearch(bvn);
   if (await PageChecker.isResultNotFoundPage(response.body)) {
     const maskedBvn = "******" + bvn.substr(6);
-    console.log('BVN not found', 'NIBSS', maskedBvn);
+    console.log('BVN not found:', 'NIBSS:', maskedBvn);
     return null;
   }
 
@@ -224,6 +224,12 @@ module.exports.fetchNimcData = async (idNumber, idType) => {
 
   const response = await doNimcSearch({idNumber, idType});
 
+  if (await PageChecker.isResultNotFoundPage(response.body)) {
+    const masked = "******" + idNumber.substr(6);
+    console.log('NIMC data not found:', 'NIBSS:', masked, idType);
+    return null;
+  }
+
   if (PageChecker.isLoginPage(response.body)) {
     return new Promise((resolve, reject) => {
       doLogin(() => {
@@ -237,13 +243,6 @@ module.exports.fetchNimcData = async (idNumber, idType) => {
       })
         .catch((err) => reject(err));
     });
-  }
-
-  if (PageChecker.isLoginPage(response.body())) {
-    return doLogin()
-      .then(() => {
-        return addToQueue()
-      })
   }
 
   const result = parsers.parseNimcResult(response.body);
