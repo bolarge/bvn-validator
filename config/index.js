@@ -1,10 +1,7 @@
 /**
  * Created by taiwo on 6/7/16.
  */
-const Bluebird = require('bluebird');
-require('mongoose').Promise = Bluebird;
-global.ES6Promise = Promise;
-global.Promise = Bluebird;
+require('mongoose').Promise = require('bluebird');
 
 module.exports.db = {
   url: process.env.MONGODB_URL || 'mongodb://localhost:27017/bvn_service'

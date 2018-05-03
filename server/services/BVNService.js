@@ -16,7 +16,7 @@ const getProvider = () => {
 };
 
 const getBvnInfo = (bvn) => {
-  return getProvider().resolve(bvn)
+  return getProvider().resolveBvn(bvn)
     .then((response) => {
       if (response) {
         BvnCache.saveResult(response);
