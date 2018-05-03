@@ -5,7 +5,7 @@ const config = require('../../../config');
 const rp = require('request-promise');
 
 
-module.exports.resolve = (bvn) => {
+module.exports.resolveBvn = (bvn) => {
   const options = {
     method: 'GET',
     uri: config.paystack.baseUrl + '/bank/resolve_bvn/' + bvn,

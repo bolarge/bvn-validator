@@ -9,22 +9,84 @@ const config = require('../../../../config');
 const TIMEOUT_SECONDS = config.nibss.portal.timeout; // Seconds per page load
 const moment = require('moment');
 const createPhantomPool = require('phantom-pool');
+const rp = require('request-promise');
 
 
 const baseUrl = config.nibss.portal.baseUrl;
-const bvnSearchPath = '/bvnnbo/bank/user/search';
-const nimcSearchPath = '/bvnnbo/bank/user/nimc';
 const POOL = createPhantomPool(config.nibss.portal.poolConfig);
 
 
-// let phantomInstance;
+let cookie = '';
+let queue = [];
+let isLoginInProgress = false;
+
+
+function redirectOn302(body, response, resolveWithFullResponse) {
+
+  console.log('response code', response.statusCode);
+
+  if (response.headers['set-cookie']) {
+    cookie = response.headers['set-cookie'].join("");
+    cookie = cookie.split(";")[0];
+  }
+
+  if (response.statusCode === 302) {
+    console.log(response.headers);
+    // Set the new url (this is the options object)
+    this.uri = isUrls(response.headers.location) ? response.headers.location : baseUrl + response.headers.location;
+    this.method = 'GET';
+    return rp(this);
+  }
+
+  return resolveWithFullResponse ? response : response.body;
+}
+
+const isUrls = (str) => {
+  return /http/.test(str);
+};
+
+
+function makeRequest(path, method, formData, cookie) {
+  const options = {
+    uri: baseUrl + path,
+    method: method,
+    followRedirect: true,
+    resolveWithFullResponse: true,
+    transform: redirectOn302,
+    headers: {
+      Host: 'bvnvalidationportal.nibss-plc.com.ng',
+      // Connection: 'keep-alive',
+      // 'Content-Length': 13,
+      Pragma: 'no-cache',
+      // 'Cache-Control': 'no-cache',
+      Origin: 'https://bvnvalidationportal.nibss-plc.com.ng',
+      'Upgrade-Insecure-Requests': 1,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.3',
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+      Referer: 'https://bvnvalidationportal.nibss-plc.com.ng/bvnnbo/bank/user/search',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
+    }
+  };
+
+  if (formData) {
+    options.form = formData;
+  }
+
+  if (cookie) {
+    options.headers.Cookie = cookie;
+  }
+
+  return rp(options);
+}
 
 
 const pageLoad = async (page, isCond, errorMessage, checks = 0) => {
   while (checks < TIMEOUT_SECONDS * 2) {
     await Promise.delay(500);
     ++checks;
-    if (await isCond(page)) {
+    if (await isCond(await page.property('content'))) {
       return page;
     }
   }
@@ -33,69 +95,61 @@ const pageLoad = async (page, isCond, errorMessage, checks = 0) => {
 };
 
 
-const doLogin = async (page) => {
+const doLogin = async (action, args) => {
 
-  const result = await page.evaluate(function (params) {
-    // Page context
-    var loginForm = document.querySelector('form[action="/bvnnbo/login.stuff"]');
-    if (!loginForm) {
-      console.error("No log in form found, exiting");
-      return;
+  queue.push(action);
+
+  if (!isLoginInProgress) {
+    isLoginInProgress = true;
+    let page = await initPage();
+    const status = await page.open(baseUrl + '/bvnnbo/bank/user/search');
+
+    if (status !== 'success') {
+      throw new Error('Could not connect to portal, ' + status)
     }
-    loginForm.elements['username'].value = params.username;
-    loginForm.elements['password'].value = params.password;
-    HTMLFormElement.prototype.submit.call(loginForm);
-  }, {
-    username: config.nibss.portal.user,
-    password: config.nibss.portal.password
-  });
 
-  return await pageLoad(page, PageChecker.isSearchPage, 'Could not log into portal');
+    const result = await page.evaluate(function (params) {
+      // Page context
+      var loginForm = document.querySelector('form[action="/bvnnbo/login.stuff"]');
+      if (!loginForm) {
+        console.error("No log in form found, exiting");
+        return;
+      }
+      loginForm.elements['username'].value = params.username;
+      loginForm.elements['password'].value = params.password;
+      HTMLFormElement.prototype.submit.call(loginForm);
+    }, {
+      username: config.nibss.portal.user,
+      password: config.nibss.portal.password
+    });
+
+    page = await pageLoad(page, PageChecker.isBvnSearchPage, 'Could not log into portal');
+    const cookieArray = await page.property('cookies');
+    if (cookieArray.length) {
+      cookie = cookieArray[0].name + '=' + cookieArray[0].value;
+    } else {
+      throw new Error('Cookie not found');
+    }
+    queue.forEach((cb) => {
+      cb();
+    });
+    queue.splice(0, queue.length);
+    isLoginInProgress = false;
+  }
 };
 
 
-const doBvnSearch = async (page, params) => {
-  const result = await page.evaluate(function (params) {
-    // Page context
-    var form = document.querySelector('form[action="/bvnnbo/bank/user/search"]');
-    if (!form) {
-      console.error("No search form found");
-      return;
-    }
-    form.elements['bvn'].value = params.bvn;
-    HTMLFormElement.prototype.submit.call(form);
-  }, params);
-
-  return await pageLoad(page, PageChecker.isResultPage);
+const doBvnSearch = async (bvn) => {
+  const formData = {bvn};
+  return makeRequest('/bvnnbo/bank/user/search', 'POST', formData, cookie);
 };
 
 
-const doPageLoad = async (page, url) => {
-  await page.evaluate(function (url) {
-    window.location = url;
-  }, url);
-
-  return await pageLoad(page, PageChecker.isNimcPage, 'Could not load NIMC search page');
+const doNimcSearch = async (params) => {
+  const formData = {idNo: params.idNumber, type: params.idType === 'documentNo' ? '1' : '0'};
+  return makeRequest('/bvnnbo/bank/user/nimc', 'POST', formData, cookie);
 };
 
-
-const doNimcSearch = async (page, params) => {
-  const result = await page.evaluate(function (params) {
-    // Page context
-    var form = document.querySelector('form[action="/bvnnbo/bank/user/nimc"]');
-    if (!form) {
-      console.error("No search form found");
-      return;
-    }
-    form.elements['idNo'].value = params.idNumber;
-    if (params.idType === 'documentNo') {
-      form.elements['type'].value = '1';
-    }
-    HTMLFormElement.prototype.submit.call(form);
-  }, params);
-
-  return await pageLoad(page, PageChecker.isResultPage, "Search Failed, portal down?");
-};
 
 const initPage = async () => {
   return POOL.use(async (phantomInstance) => {
@@ -135,67 +189,69 @@ const initPage = async () => {
 };
 
 
-module.exports.resolve = async (bvn) => {
+module.exports.resolveBvn = async (bvn) => {
 
-  let page = await initPage();
-  const status = await page.open(baseUrl + bvnSearchPath);
-
-  if (status !== 'success') {
-    throw new Error('Could not connect to portal, ' + status)
+  const response = await doBvnSearch(bvn);
+  if (await PageChecker.isResultNotFoundPage(response.body)) {
+    const maskedBvn = "******" + bvn.substr(6);
+    console.log('BVN not found', 'NIBSS', maskedBvn);
+    return null;
   }
 
-  if (await PageChecker.isLoginPage(page)) {
-    console.log("------Login page-----", new Date());
-    console.log('Doing log in');
-    page = await doLogin(page);
+  if (PageChecker.isLoginPage(response.body)) {
+    return new Promise((resolve, reject) => {
+      doLogin(() => {
+        return module.exports.resolveBvn(bvn)
+          .then((data) => {
+            resolve(data);
+          })
+          .catch((err) => {
+            reject(err);
+          })
+      })
+        .catch((err) => reject(err));
+    });
   }
 
-  try {
-    page = await doBvnSearch(page, {bvn});
-    if (await PageChecker.isResultNotFoundPage(page)) {
-      return null;
-    }
-    const result = parsers.parseBvnResult(await page.property('content'));
-    result.provider = module.exports.name;
-    return result;
-  } finally {
-    page.close();
-  }
+  const result = parsers.parseBvnResult(response.body);
+  result.provider = module.exports.name;
+  return result;
+
 };
 
 
 module.exports.fetchNimcData = async (idNumber, idType) => {
 
-  let page = await initPage();
-  let status = await page.open(baseUrl + nimcSearchPath);
-  if (status !== 'success') {
-    throw new Error('Could not connect to portal, ' + status)
+  const response = await doNimcSearch({idNumber, idType});
+
+  if (PageChecker.isLoginPage(response.body)) {
+    return new Promise((resolve, reject) => {
+      doLogin(() => {
+        return module.exports.fetchNimcData(idNumber, idType)
+          .then((data) => {
+            resolve(data);
+          })
+          .catch((err) => {
+            reject(err);
+          })
+      })
+        .catch((err) => reject(err));
+    });
   }
 
-
-  if (await PageChecker.isLoginPage(page)) {
-    console.log("------Login page-----", new Date());
-    console.log('Doing log in');
-    page = await doLogin(page);
-    await doPageLoad(page, baseUrl + nimcSearchPath)
+  if (PageChecker.isLoginPage(response.body())) {
+    return doLogin()
+      .then(() => {
+        return addToQueue()
+      })
   }
 
-  // const idType =  idNumber.length === 11 ? 'nin' : 'documentNo';
-  page = await doNimcSearch(page, {idNumber, idType});
+  const result = parsers.parseNimcResult(response.body);
+  result.provider = module.exports.name;
+  result.idNumber = idNumber;
+  result.idType = idType;
+  return result;
 
-  if (await PageChecker.isResultNotFoundPage(page)) {
-    return null;
-  }
-
-  try {
-    const result = parsers.parseNimcResult(await page.property('content'));
-    result.provider = module.exports.name;
-    result.idNumber = idNumber;
-    result.idType = idType;
-    return result;
-  } finally {
-    page.close();
-  }
 };
 
 module.exports.name = 'nibss';
