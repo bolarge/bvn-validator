@@ -38,8 +38,8 @@ module.exports.nibss = {
     password: process.env.NIBSS_PASSWORD || '',
     timeout: parseInt(process.env.NIBSS_PORTAL_TIMEOUT_SECONDS) || 60,
     poolConfig: {
-      max: 10,
-      min: 2,
+      max: 5,
+      min: 1,
       idleTimeoutMillis: 180000,
       maxUses: 50
     }
