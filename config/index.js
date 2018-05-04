@@ -36,7 +36,13 @@ module.exports.nibss = {
     baseUrl: process.env.NIBSS_PORTAL_URL || 'https://bvnvalidationportal.nibss-plc.com.ng',
     user: process.env.NIBSS_USERNAME || '',
     password: process.env.NIBSS_PASSWORD || '',
-    timeout: parseInt(process.env.NIBSS_PORTAL_TIMEOUT_SECONDS) || 60
+    timeout: parseInt(process.env.NIBSS_PORTAL_TIMEOUT_SECONDS) || 60,
+    poolConfig: {
+      max: 5,
+      min: 1,
+      idleTimeoutMillis: 180000,
+      maxUses: 50
+    }
   }
 };
 
