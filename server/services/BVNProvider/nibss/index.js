@@ -84,7 +84,7 @@ const processLogin = async (callback) => {
   let err = null;
   if (!isLoginInProgress) {
     isLoginInProgress = true;
-    let page = await initPage();
+    let {page, phantomInstance} = await initPage();
     const status = await page.open(baseUrl + '/bvnnbo/bank/user/search');
 
     if (status !== 'success') {
@@ -124,6 +124,7 @@ const processLogin = async (callback) => {
     });
 
     queue.splice(0, queue.length);
+    await phantomInstance.exit();
   }
 };
 
@@ -185,7 +186,7 @@ const initPage = async () => {
     pageInstance.setting("resourceTimeout", TIMEOUT_SECONDS * 1000);
 
     console.log('Init complete', moment().format());
-    return pageInstance;
+    return {page: pageInstance, phantomInstance};
   });
 };
 
