@@ -227,6 +227,7 @@ module.exports.resolveBvn = function (req, res) {
       res.json(result)
     })
     .catch(function(err) {
+      console.error(err.message);
       res.status(500).json({message: err.message});
     })
 
