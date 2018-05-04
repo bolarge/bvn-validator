@@ -124,7 +124,7 @@ const processLogin = async (callback) => {
     });
 
     queue.splice(0, queue.length);
-    await phantomInstance.exit();
+    await page.close();
   }
 };
 
@@ -155,10 +155,6 @@ const doNimcSearch = async (params) => {
 
 const initPage = async () => {
   return POOL.use(async (phantomInstance) => {
-    if (!phantomInstance) {
-      console.log('Creating instance', moment().format());
-      phantomInstance = await phantom.create();
-    }
 
     console.log('Creating page', moment().format());
     let pageInstance = await phantomInstance.createPage();
