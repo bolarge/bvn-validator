@@ -225,7 +225,7 @@ module.exports.fetchNimcData = async (idNumber, idType) => {
   }
 
   if (!PageChecker.isResultPage(response.body)) {
-    throw new Error('BVN Search failed');
+    throw new Error('NIMC Search failed');
   }
 
   if (PageChecker.isResultNotFoundPage(response.body)) {
