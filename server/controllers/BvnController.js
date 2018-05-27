@@ -4,7 +4,7 @@
 
 "use strict";
 
-var Q = require("q"),
+const Q = require("q"),
   soap = require('soap'),
   ssm = require("../lib/ssm"),
   js2Xml = require("js2xmlparser"),
@@ -16,70 +16,66 @@ var Q = require("q"),
 
 const BVNService = require('../services/BVNService');
 
-var soapClient,
-  options = {
-    ignoredNamespaces: {
-      namespaces: ['xsi'],
-      override: true
-    }
-  };
+let soapClient;
+const options = {
+  ignoredNamespaces: {
+    namespaces: ['xsi'],
+    override: true
+  }
+};
 
-debug('Creating soap client...');
-if (!process.env.SIMULATE_RESPONSE) {
-  soap.createClient(config.nibss.wsdlUrl, options, function (err, client) {
+const getSoapClient = async () => {
+  if (soapClient) {
+    return soapClient;
+  }
 
-    if (err) {
-      console.error('Could not initialize Soap Client!');
-      throw err;
-    }
-    debug('Soap client intialization completed!');
-    soapClient = client;
+  return new Promise((resolve, reject) => {
+    debug('Creating soap client...');
+    soap.createClient(config.nibss.wsdlUrl, options, function (err, client) {
+      if (err) {
+        console.error('Could not initialize Soap Client!');
+        reject(err);
+      }
+
+      debug('Soap client intialization completed!');
+      resolve(soapClient = client);
+    });
   });
-}
+};
 
 
-function callBvnService(inputDataObject) {
-  var args = {
+const callBvnService = async function (inputDataObject) {
+  const args = {
     requestXML: '',
     organisationCode: config.nibss.organisationCode
   };
 
-
-  var deferred = Q.defer();
-
-  var xmlRequest = js2Xml("ValidationRequest", inputDataObject);
-
-  if (!soapClient) {
-    throw new Error('Soap client is still initializing');
+  if (process.env.SIMULATE_RESPONSE) {
+    return {
+      ValidationResponse: {
+        RequestStatus: ['00'],
+        BVN: [inputDataObject.BVN],
+        Validity: [Math.floor(Math.random() * 3000) % 2 ? 'INVALID' : 'VALID']
+      }
+    };
   }
 
+  const deferred = Q.defer();
+  const xmlRequest = js2Xml("ValidationRequest", inputDataObject);
+
+  let bvnWsClient = await getSoapClient();
   debug('Encrypting request...');
+
   ssm.encrypt(xmlRequest, config.ssm.nibssKeyPath)
     .then(function (res) {
       args.requestXML = res;
       debug('Request has been encrypted');
 
-      if (process.env.SIMULATE_RESPONSE) {
-        setTimeout(function () {
-          var dummy = {
-            ValidationResponse: {
-              RequestStatus: ['00'],
-              BVN: [inputDataObject.BVN],
-              Validity: [Math.floor(Math.random() * 3000) % 2 ? 'INVALID' : 'VALID']
-            }
-          };
-
-          deferred.resolve(dummy);
-        }, 3000);
-
-        return;
-      }
-
-      var timeStart = Date.now();
+      const timeStart = Date.now();
       debug('Starting verify request...');
-      soapClient.verifySingleBVN(args, function (err, soapResp) {
-        debug('Verify request completed after:' + (Date.now() - timeStart) + "ms");
 
+      bvnWsClient.verifySingleBVN(args, function (err, soapResp) {
+        debug('Verify request completed after:' + (Date.now() - timeStart) + "ms");
         if (err) {
           return deferred.reject(err);
         }
@@ -100,13 +96,14 @@ function callBvnService(inputDataObject) {
             debug(err);
           });
       });
+
     });
 
   return deferred.promise;
-}
+};
 
 
-var performBvnMatch = function (request) {
+const performBvnMatch = function (request) {
   debug('Checking if the request is cached');
   return ResultCache.getCachedResult(request)
     .then(function (result) {
@@ -139,7 +136,7 @@ var performBvnMatch = function (request) {
 };
 
 
-var validateRequest = function (request) {
+const validateRequest = function (request) {
   if (!request.BVN) {
     return "BVN is missing";
   }
@@ -155,25 +152,25 @@ var validateRequest = function (request) {
 };
 
 
-var parseResult = function (res) {
-  var resp = res.ValidationResponse,
+const parseResult = function (res) {
+  const resp = res.ValidationResponse,
     validity = resp && Array.isArray(resp.Validity) && resp.Validity.length > 0 ? resp.Validity[0] : null;
 
-  var reason = "BVN ";
+  let reason = "BVN ";
   reason += (validity || " check failed");
 
   return {
     valid: resp && Array.isArray(resp.RequestStatus)
-      && resp.RequestStatus[0] === "00"
-      && validity === 'VALID',
+    && resp.RequestStatus[0] === "00"
+    && validity === 'VALID',
     reason: reason
   };
 };
 
 module.exports.validate = function (req, res) {
 
-  var inputDataObject = req.body.inputDataObject || {};
-  var validate = validateRequest(inputDataObject);
+  const inputDataObject = req.body.inputDataObject || {};
+  const validate = validateRequest(inputDataObject);
   if (validate !== true) {
     return res.status(400)
       .json({
@@ -192,9 +189,9 @@ module.exports.validate = function (req, res) {
 
 
 module.exports.validateBoolean = function (req, res) {
-  var input = _.merge({}, req.query, req.body || {});
+  const input = _.merge({}, req.query, req.body || {});
 
-  var validate = validateRequest(input);
+  const validate = validateRequest(input);
 
   if (validate !== true) {
     return res.status(400)
@@ -220,13 +217,13 @@ module.exports.resolveBvn = function (req, res) {
   }
   const forceReload = req.query.forceReload === '1';
   BVNService.resolve(req.params.bvn, forceReload)
-    .then(function(result) {
+    .then(function (result) {
       if (!result) {
         return res.status(404).json({message: "BVN not found"})
       }
       res.json(result)
     })
-    .catch(function(err) {
+    .catch(function (err) {
       console.error(err.message);
       res.status(500).json({message: err.message});
     })
