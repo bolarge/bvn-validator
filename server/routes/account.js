@@ -16,16 +16,17 @@ module.exports = function (app) {
   );
 
   app.post("/oapi/payout", authPolicy, (req, res) => {
+
     const client = require('../services/CPoSClient');
+
     client.payoutImport(req.body)
-      .spread((status, body) => res.send(status, body))
+      .spread((status, body) => console.log('Payout import complete: ', body.id, body.accountId))
       .catch((err) => {
         console.error("Could not complete import:", err);
-        res.send(500, {
-          error: "Could not complete import"
-        })
       });
 
+    res.send(200, {message: 'Sent for processing'});
   });
+
 };
 
