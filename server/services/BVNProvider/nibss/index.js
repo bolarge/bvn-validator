@@ -1,7 +1,6 @@
 /**
  * Created by nonami on 24/04/2018.
  */
-const phantom = require('phantom');
 const Promise = require('bluebird');
 const PageChecker = require('./pageChecker');
 const parsers = require('./resultPageParsers');
@@ -243,3 +242,17 @@ module.exports.fetchNimcData = async (idNumber, idType) => {
 };
 
 module.exports.name = 'nibss';
+
+
+const clearPool = function (event) {
+  if (POOL) {
+    console.log('Clearing pool of PhantomJS process, event =', event);
+    POOL.drain().then(() => {
+      POOL.clear();
+    });
+  }
+};
+
+[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
+  process.on(eventType, clearPool.bind(null, eventType));
+});
