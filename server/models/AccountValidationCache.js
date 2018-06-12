@@ -65,12 +65,15 @@ const doNameMatch = (request, cachedData) => {
   return matches >= 2;
 };
 
+const getRequestHash = (request) => {
+  return objectHash(_.pick(request, ['accountNumber', 'bankCode']));
+};
+
 module.exports = AccountValidationCache;
 
 module.exports.getCachedResult = function (request) {
   request = preprocess(request);
-  const hashDeterminant = _.pick(request, ['accountNumber', 'bankCode']);
-  const hash = objectHash(hashDeterminant);
+  const hash = getRequestHash(request);
 
   const deferred = q.defer();
 
@@ -98,8 +101,7 @@ module.exports.getCachedResult = function (request) {
 module.exports.saveResult = function (request, result) {
 
   request = preprocess(request);
-  const hashDeterminant = _.pick(request, ['accountNumber', 'bankCode']);
-  const hash = objectHash(hashDeterminant);
+  const hash = getRequestHash(request);
 
   const deferred = q.defer();
 
