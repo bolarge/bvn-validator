@@ -12,6 +12,20 @@ const isDateData = (dataKey) => {
   return ['registrationDate', 'dob'].includes(dataKey);
 };
 
+const convertDate = (content) => {
+  let dateFmt;
+  if (/\d{1,2}-[a-zA-Z]{3}-\d{4}/.test(content)) {
+    dateFmt = "DD-MMM-YYYY";
+  } else if (/\d{1,2}-[a-zA-Z]{3}-\d{2}/.test(content)) {
+    dateFmt = "DD-MMM-YY";
+  } else if (/\d{1,2}-\d{2}-\d{4}/.test(content)) {
+    dateFmt = "DD-MM-YYYY";
+  } else {
+    throw new Error(`Unexpected date format. ${content}`)
+  }
+  return moment(content, dateFmt).format('YYYY-MM-DD');
+};
+
 module.exports.parseBvnResult = (content) => {
   const map = new Map();
   Object.keys(bvnSchema).forEach(key => {
@@ -26,13 +40,13 @@ module.exports.parseBvnResult = (content) => {
   }
   const tbl = div.querySelector('table');
   const items = tbl.rows;
-  console.log(items.length);
+
   for (let i = 2; i < items.length - 1; i++) {
     const cells = items[i].cells;
     const key = map.get(cells[0].textContent.trim());
     let content = cells[1].textContent.trim();
     if (isDateData(key)) {
-      content = moment(content, "DD-MMM-YY").format('YYYY-MM-DD');
+      content = convertDate(content);
     }
     result[key] = content;
   }
@@ -65,7 +79,7 @@ module.exports.parseNimcResult = (content) => {
     const key = map.get(cells[0].textContent.trim());
     let content = cells[1].textContent.trim();
     if (isDateData(key)) {
-      content = moment(content, "DD-MM-YYYY").format('YYYY-MM-DD');
+      content = convertDate(content);
     }
     result[key] = content;
   }

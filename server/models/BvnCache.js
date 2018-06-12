@@ -76,7 +76,7 @@ module.exports.getCachedResult = function (bvn) {
 
 
 module.exports.saveResult = function (result) {
-  return BvnCache.findOneAndUpdate({bvn: result.bvn}, {$set: result}, {upsert: true, new: true})
+  return BvnCache.findOneAndUpdate({bvn: result.bvn}, {$set: result}, {upsert: true, new: true, setDefaultsOnInsert: true})
     .then((r) => {
       return r;
     })
