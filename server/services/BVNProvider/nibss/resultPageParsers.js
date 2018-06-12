@@ -19,7 +19,7 @@ const convertDate = (content) => {
   } else if (/\d{1,2}-[a-zA-Z]{3}-\d{2}/.test(content)) {
     format = "DD-MMM-YY";
   } else {
-    throw new Error(`Unexpected date format. Expecting 'DD-MMM-YYYY', found ${content}`)
+    throw new Error(`Unexpected date format. Expecting 'DD-MMM-YYYY' or 'DD-MMM-YY', found ${content}`)
   }
   return moment(content, format).format('YYYY-MM-DD');
 };
