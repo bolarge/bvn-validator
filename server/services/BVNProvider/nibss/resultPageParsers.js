@@ -13,15 +13,17 @@ const isDateData = (dataKey) => {
 };
 
 const convertDate = (content) => {
-  let format;
+  let dateFmt;
   if (/\d{1,2}-[a-zA-Z]{3}-\d{4}/.test(content)) {
-    format = "DD-MMM-YYYY";
+    dateFmt = "DD-MMM-YYYY";
   } else if (/\d{1,2}-[a-zA-Z]{3}-\d{2}/.test(content)) {
-    format = "DD-MMM-YY";
+    dateFmt = "DD-MMM-YY";
+  }else if (/\d{1,2}-\d{2}-\d{4}/.test(content)) {
+    dateFmt = "DD-MM-YYYY";
   } else {
-    throw new Error(`Unexpected date format. Expecting 'DD-MMM-YYYY' or 'DD-MMM-YY', found ${content}`)
+    throw new Error(`Unexpected date format. ${content}`)
   }
-  return moment(content, format).format('YYYY-MM-DD');
+  return moment(content, dateFmt).format('YYYY-MM-DD');
 };
 
 module.exports.parseBvnResult = (content) => {
@@ -38,7 +40,7 @@ module.exports.parseBvnResult = (content) => {
   }
   const tbl = div.querySelector('table');
   const items = tbl.rows;
-  console.log(items.length);
+
   for (let i = 2; i < items.length - 1; i++) {
     const cells = items[i].cells;
     const key = map.get(cells[0].textContent.trim());
