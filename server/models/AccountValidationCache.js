@@ -4,11 +4,12 @@
 
 "use strict";
 
-var mongoose = require('mongoose'),
-    objectHash = require('object-hash'),
-    Utils = require('../services/Utils'),
-    _ = require('lodash'),
-    q = require('q');
+const mongoose = require('mongoose'),
+  objectHash = require('object-hash'),
+  Utils = require('../services/Utils'),
+  _ = require('lodash'),
+  q = require('q'),
+  u_ = require('utility-belt');
 
 
 var storeSchema = mongoose.Schema({
@@ -34,9 +35,9 @@ var storeSchema = mongoose.Schema({
 });
 
 
-var AccountValidationCache = mongoose.model('AccountValidationCache', storeSchema);
+const AccountValidationCache = mongoose.model('AccountValidationCache', storeSchema);
 
-var preprocess = function (request) {
+const preprocess = function (request) {
 
   var splitNames = Utils.splitNames([request.firstName, request.lastName]);
   var reqObj = {
@@ -56,14 +57,22 @@ var preprocess = function (request) {
   return out;
 };
 
+const doNameMatch = (request, cachedData) => {
+  const specifiedNames = request.names;
+  const sourceNames = `${cachedData.firstName} ${cachedData.lastName}`;
+
+  const {matches, totalScore} = u_.doNameMatch(specifiedNames, sourceNames);
+  return matches >= 2;
+};
 
 module.exports = AccountValidationCache;
 
 module.exports.getCachedResult = function (request) {
   request = preprocess(request);
-  var hash = objectHash(request);
+  const hashDeterminant = _.pick(request, ['accountNumber', 'bankCode']);
+  const hash = objectHash(hashDeterminant);
 
-  var deferred = q.defer();
+  const deferred = q.defer();
 
   if (request.skipCache) {
     setTimeout(function () {
@@ -74,7 +83,11 @@ module.exports.getCachedResult = function (request) {
       if (err) {
         deferred.reject(err);
       } else {
-        deferred.resolve(cached && cached.result ? cached.result : null);
+        if (cached && cached.result && cached.result.data && doNameMatch(request, cached.result.data)) {
+          deferred.resolve(cached.result);
+        } else {
+          deferred.resolve(null);
+        }
       }
     });
   }
@@ -85,9 +98,10 @@ module.exports.getCachedResult = function (request) {
 module.exports.saveResult = function (request, result) {
 
   request = preprocess(request);
-  var hash = objectHash(request);
+  const hashDeterminant = _.pick(request, ['accountNumber', 'bankCode']);
+  const hash = objectHash(hashDeterminant);
 
-  var deferred = q.defer();
+  const deferred = q.defer();
 
   AccountValidationCache.findOneAndUpdate({hash: hash}, {
     bankCode: request.bankCode,
