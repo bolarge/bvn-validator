@@ -18,7 +18,7 @@ const convertDate = (content) => {
     dateFmt = "DD-MMM-YYYY";
   } else if (/\d{1,2}-[a-zA-Z]{3}-\d{2}/.test(content)) {
     dateFmt = "DD-MMM-YY";
-  }else if (/\d{1,2}-\d{2}-\d{4}/.test(content)) {
+  } else if (/\d{1,2}-\d{2}-\d{4}/.test(content)) {
     dateFmt = "DD-MM-YYYY";
   } else {
     throw new Error(`Unexpected date format. ${content}`)
