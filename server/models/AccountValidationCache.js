@@ -8,8 +8,7 @@ const mongoose = require('mongoose'),
   objectHash = require('object-hash'),
   Utils = require('../services/Utils'),
   _ = require('lodash'),
-  q = require('q'),
-  u_ = require('utility-belt');
+  q = require('q');
 
 
 var storeSchema = mongoose.Schema({
@@ -57,14 +56,6 @@ const preprocess = function (request) {
   return out;
 };
 
-const doNameMatch = (request, cachedData) => {
-  const specifiedNames = request.names;
-  const sourceNames = `${cachedData.firstName} ${cachedData.lastName}`;
-
-  const {matches, totalScore} = u_.doNameMatch(specifiedNames, sourceNames);
-  return matches >= 2;
-};
-
 const getRequestHash = (request) => {
   return objectHash(_.pick(request, ['accountNumber', 'bankCode']));
 };
@@ -86,11 +77,7 @@ module.exports.getCachedResult = function (request) {
       if (err) {
         deferred.reject(err);
       } else {
-        if (cached && cached.result && cached.result.data && doNameMatch(request, cached.result.data)) {
-          deferred.resolve(cached.result);
-        } else {
-          deferred.resolve(null);
-        }
+        deferred.resolve(cached && cached.result ? cached.result : null);
       }
     });
   }
