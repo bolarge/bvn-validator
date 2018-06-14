@@ -9,7 +9,8 @@ const mongoose = require('mongoose'),
   Utils = require('../services/Utils'),
   _ = require('lodash'),
   q = require('q'),
-  moment = require('moment');
+  moment = require('moment'),
+  cacheValidityDays = process.env.ACC_VALIDATION_CACHE_VALIDITY_DAYS || 30;
 
 
 var storeSchema = mongoose.Schema({
@@ -30,9 +31,6 @@ var storeSchema = mongoose.Schema({
     required: true
   },
   createdAt: {
-    type: Date
-  },
-  expiresAt: {
     type: Date
   }
 });
@@ -77,7 +75,7 @@ module.exports.getCachedResult = function (request) {
       deferred.resolve(null);
     }, 10);
   } else {
-    AccountValidationCache.findOne({hash: hash, expiresAt: {$gte: new Date()}}, function (err, cached) {
+    AccountValidationCache.findOne({hash: hash, createdAt: {$gte: moment().subtract(cacheValidityDays, 'day').toDate()}}, function (err, cached) {
       if (err) {
         deferred.reject(err);
       } else {
@@ -100,8 +98,7 @@ module.exports.saveResult = function (request, result) {
     bankCode: request.bankCode,
     accountNumber: request.accountNumber,
     result: result,
-    createdAt: Date.now(),
-    expiresAt: moment().add(1, 'month').toDate()
+    createdAt: Date.now()
   }, {
     upsert: true
   }, function (err, updated) {
