@@ -196,6 +196,7 @@ module.exports.resolveBvn = async (bvn) => {
   }
 
   if (!PageChecker.isResultPage(response.body)) {
+    console.error('Fatal unexpected, BVN:', bvn, parsers.parseErrorMessage(response.body));
     throw new Error('BVN Search failed');
   }
 
@@ -203,6 +204,7 @@ module.exports.resolveBvn = async (bvn) => {
   if (PageChecker.isResultNotFoundPage(response.body)) {
     const maskedBvn = "******" + bvn.substr(6);
     console.log('BVN not found:', 'NIBSS:', maskedBvn);
+    console.error('Error: ', parsers.parseErrorMessage(response.body));
     return null;
   }
 
@@ -217,19 +219,20 @@ module.exports.fetchNimcData = async (idNumber, idType) => {
 
   let response = await doNimcSearch({idNumber, idType});
 
-
   if (PageChecker.isLoginPage(response.body)) {
     await doLogin();
     response = await doNimcSearch({idNumber, idType});
   }
 
   if (!PageChecker.isResultPage(response.body)) {
+    console.error('Fatal unexpected, ID:', idNumber, parsers.parseErrorMessage(response.body));
     throw new Error('NIMC Search failed');
   }
 
   if (PageChecker.isResultNotFoundPage(response.body)) {
     const masked = "******" + idNumber.substr(6);
     console.log('NIMC data not found:', 'NIBSS:', masked, idType);
+    console.error('Error: ', parsers.parseErrorMessage(response.body));
     return null;
   }
 
