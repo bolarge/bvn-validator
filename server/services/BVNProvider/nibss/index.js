@@ -196,7 +196,7 @@ module.exports.resolveBvn = async (bvn) => {
   }
 
   if (!PageChecker.isResultPage(response.body)) {
-    console.error('Fatal unexpected: ', parsers.parseErrorMessage(response.body));
+    console.error('Fatal unexpected, BVN:', bvn, parsers.parseErrorMessage(response.body));
     throw new Error('BVN Search failed');
   }
 
@@ -219,15 +219,13 @@ module.exports.fetchNimcData = async (idNumber, idType) => {
 
   let response = await doNimcSearch({idNumber, idType});
 
-
   if (PageChecker.isLoginPage(response.body)) {
     await doLogin();
     response = await doNimcSearch({idNumber, idType});
   }
 
   if (!PageChecker.isResultPage(response.body)) {
-    console.error('Fatal unexpected: ', parsers.parseErrorMessage(response.body));
-
+    console.error('Fatal unexpected, ID:', idNumber, parsers.parseErrorMessage(response.body));
     throw new Error('NIMC Search failed');
   }
 
