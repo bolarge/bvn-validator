@@ -203,6 +203,7 @@ module.exports.resolveBvn = async (bvn) => {
   if (PageChecker.isResultNotFoundPage(response.body)) {
     const maskedBvn = "******" + bvn.substr(6);
     console.log('BVN not found:', 'NIBSS:', maskedBvn);
+    console.error('Error: ', parsers.parseErrorMessage(response.body));
     return null;
   }
 

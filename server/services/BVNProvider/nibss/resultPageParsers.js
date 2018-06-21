@@ -89,3 +89,13 @@ module.exports.parseNimcResult = (content) => {
 
   return result;
 };
+
+
+module.exports.parseErrorMessage = (content) => {
+  const jsDom = new JSDOM(content);
+  const div = jsDom.window.document.querySelector("div[style='color:red']");
+  if (div) {
+    return div.textContent;
+  }
+  return null;
+};
