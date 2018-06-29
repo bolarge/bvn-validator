@@ -4,13 +4,11 @@
 
 "use strict";
 
-const mongoose = require('mongoose'),
-  objectHash = require('object-hash'),
-  Utils = require('../services/Utils'),
-  _ = require('lodash'),
-  q = require('q'),
-  moment = require('moment'),
-  cacheValidityDays = process.env.ACC_VALIDATION_CACHE_VALIDITY_DAYS || 30;
+var mongoose = require('mongoose'),
+    objectHash = require('object-hash'),
+    Utils = require('../services/Utils'),
+    _ = require('lodash'),
+    q = require('q');
 
 
 var storeSchema = mongoose.Schema({
@@ -36,9 +34,9 @@ var storeSchema = mongoose.Schema({
 });
 
 
-const AccountValidationCache = mongoose.model('AccountValidationCache', storeSchema);
+var AccountValidationCache = mongoose.model('AccountValidationCache', storeSchema);
 
-const preprocess = function (request) {
+var preprocess = function (request) {
 
   var splitNames = Utils.splitNames([request.firstName, request.lastName]);
   var reqObj = {
@@ -58,24 +56,21 @@ const preprocess = function (request) {
   return out;
 };
 
-const getRequestHash = (request) => {
-  return objectHash(_.pick(request, ['accountNumber', 'bankCode']));
-};
 
 module.exports = AccountValidationCache;
 
 module.exports.getCachedResult = function (request) {
   request = preprocess(request);
-  const hash = getRequestHash(request);
+  var hash = objectHash(request);
 
-  const deferred = q.defer();
+  var deferred = q.defer();
 
   if (request.skipCache) {
     setTimeout(function () {
       deferred.resolve(null);
     }, 10);
   } else {
-    AccountValidationCache.findOne({hash: hash, createdAt: {$gte: moment().subtract(cacheValidityDays, 'day').toDate()}}, function (err, cached) {
+    AccountValidationCache.findOne({hash: hash}, function (err, cached) {
       if (err) {
         deferred.reject(err);
       } else {
@@ -90,9 +85,9 @@ module.exports.getCachedResult = function (request) {
 module.exports.saveResult = function (request, result) {
 
   request = preprocess(request);
-  const hash = getRequestHash(request);
+  var hash = objectHash(request);
 
-  const deferred = q.defer();
+  var deferred = q.defer();
 
   AccountValidationCache.findOneAndUpdate({hash: hash}, {
     bankCode: request.bankCode,
