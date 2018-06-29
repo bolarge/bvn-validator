@@ -6,7 +6,8 @@
 
 const AccountValidationCache = require('../models/AccountValidationCache'),
   CPoSAccountValidation = require('../services/CPoSClient'),
-  Utils = require('../services/Utils');
+  Utils = require('../services/Utils'),
+  u_ = require('utility-belt');
 
 
 const validateRequest = function (data, requiredFields) {
@@ -32,16 +33,40 @@ const validateRequest = function (data, requiredFields) {
   return {status: true, data: data};
 };
 
+const doNameMatch = (request, cachedData) => {
+  const specifiedNames = `${request.firstName} ${request.lastName}`;
+  const sourceNames = `${cachedData.firstName} ${cachedData.lastName}`;
+
+  const {matches, totalScore} = u_.doNameMatch(specifiedNames, sourceNames);
+  return matches >= 2;
+};
+
+const doBvnMatch = (request, cachedData) => {
+  return request.bvn === cachedData.bvn;
+};
 
 const performAccountValidation = function (request) {
 
   console.log('Checking if the request is cached');
   return AccountValidationCache.getCachedResult(request)
     .then(function (result) {
+
       if (result) {
 
+        if (!doBvnMatch(request, result.data)) {
+          result.valid = false;
+          return [result, 'BVN_MISMATCH'];
+        }
+
+        if (!doNameMatch(request, result.data)) {
+          result.valid = false;
+          return [result, 'NAME_MISMATCH'];
+        }
+
+        result.valid = true;
         console.log('Result cached, returning cached result: ', result.data.bvn, '-', result.data.accountNumber, '-', result.data.bankCode);
         return [result, null];
+
       }
 
       console.log('Calling service...');
