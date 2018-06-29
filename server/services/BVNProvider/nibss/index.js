@@ -254,6 +254,7 @@ const clearPool = function (event) {
       POOL.clear();
     });
   }
+  return true;
 };
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {

@@ -6,7 +6,10 @@
 
 const AccountValidationCache = require('../models/AccountValidationCache'),
   CPoSAccountValidation = require('../services/CPoSClient'),
-  Utils = require('../services/Utils');
+  Utils = require('../services/Utils'),
+  u_ = require('utility-belt'),
+  _ = require('lodash')
+;
 
 
 const validateRequest = function (data, requiredFields) {
@@ -32,41 +35,51 @@ const validateRequest = function (data, requiredFields) {
   return {status: true, data: data};
 };
 
+const doNameMatch = (request, cachedData) => {
+  const specifiedNames = `${request.firstName} ${request.lastName}`;
+  const sourceNames = `${cachedData.otherNames} ${cachedData.lastName}`;
 
-const performAccountValidation = function (request) {
+  const {matches, totalScore} = u_.doNameMatch(specifiedNames, sourceNames);
+  return matches >= 2;
+};
+
+const doBvnMatch = (request, cachedData) => {
+  return request.bvn === cachedData.bvn;
+};
+
+const performAccountValidation = async function (request) {
 
   console.log('Checking if the request is cached');
-  return AccountValidationCache.getCachedResult(request)
-    .then(function (result) {
-      if (result) {
+  let data = await AccountValidationCache.getCachedResult(request);
+  if (data) {
+    console.log('Cached result found');
+    if (!doBvnMatch(request, data)) {
+      return Utils.generateResponse(false, data, 'BVN_MISMATCH');
+    }
 
-        console.log('Result cached, returning cached result: ', result.data.bvn, '-', result.data.accountNumber, '-', result.data.bankCode);
-        return [result, null];
-      }
+    if (!doNameMatch(request, data)) {
+      return Utils.generateResponse(false, data, 'NAME_MISMATCH');
+    }
 
-      console.log('Calling service...');
-      return CPoSAccountValidation.accountValidation(request)
-        .then(function (result) {
-          if (!result) {
-            throw new Error('RECORD_NOT_FOUND');
-          }
+    console.log('Result cached, returning cached result: ', request.accountNumber, '-', request.bankCode);
+    return Utils.generateResponse(true, data, null);
+  } else {
+    console.log('No cached result, calling service...');
+    let result = await CPoSAccountValidation.accountValidation(request);
+    if (result.systemError) {
+      throw new Error('Account Validation System Error!');
+    }
 
-          if (result.systemError) {
-            throw new Error('Account Validation System Error!');
-          }
-
-          if (result.valid) {
-            console.log('Caching valid result');
-            AccountValidationCache.saveResult(request, result)
-              .then(function () {
-                console.log('Result has been saved.');
-              });
-          }
-
-
-          return [result, null];
+    if (result.data && result.data.status === '00') {
+      console.log('Caching result returned');
+      AccountValidationCache.saveResult(request, result.data)
+        .then(function (save) {
+          console.log('Result has been saved.', save._id);
         });
-    });
+    }
+
+    return result;
+  }
 };
 
 module.exports.validateAccount = function (req, res) {
@@ -81,17 +94,13 @@ module.exports.validateAccount = function (req, res) {
   }
 
   return performAccountValidation(validRequest.data)
-    .spread(function (result, message) {
-
-      if (message) {
-        return res.status(200).json(Utils.generateResponse(false, {}, message));
-      }
-
-      return res.status(200).json(result);
-
-    })
+    .then((result) => res.status(200).json(result))
     .catch(function (err) {
-      return res.status(500).json(Utils.generateResponse(false, {}, err.message));
+      console.error(err.message);
+      console.error(err.stack);
+      let response = Utils.generateResponse(false, {}, err.message);
+      response.systemError = true;
+      return res.status(500).json(response);
     });
 };
 
