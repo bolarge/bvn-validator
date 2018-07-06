@@ -8,8 +8,12 @@ const AccountValidationCache = require('../models/AccountValidationCache'),
   CPoSAccountValidation = require('../services/CPoSClient'),
   Utils = require('../services/Utils'),
   u_ = require('utility-belt'),
-  _ = require('lodash')
+  objectHash = require('object-hash'),
+  _ = require('lodash'),
+  MIN_NAME_MATCHES = 2
 ;
+
+const BVNService = require("../services/BVNService");
 
 
 const validateRequest = function (data, requiredFields) {
@@ -38,48 +42,94 @@ const validateRequest = function (data, requiredFields) {
 const doNameMatch = (request, cachedData) => {
   const specifiedNames = `${request.firstName} ${request.lastName}`;
   const sourceNames = `${cachedData.otherNames} ${cachedData.lastName}`;
-
-  const {matches, totalScore} = u_.doNameMatch(specifiedNames, sourceNames);
-  return matches >= 2;
+  return u_.doNameMatch(specifiedNames, sourceNames).matches >= MIN_NAME_MATCHES;
 };
 
 const doBvnMatch = (request, cachedData) => {
   return request.bvn === cachedData.bvn;
 };
 
+const cacheResult = (request, data) => {
+  return AccountValidationCache.saveResult(request, data)
+    .then(function (save) {
+      console.log(request.bankCode, '-', request.accountNumber, 'Result has been saved.', save._id);
+    });
+};
+
 const performAccountValidation = async function (request) {
 
-  console.log('Checking if the request is cached');
+  const tag = `${request.bankCode} - ${request.accountNumber}`;
+
+  console.log(tag, 'Checking if the request is cached');
   let data = await AccountValidationCache.getCachedResult(request);
-  if (data) {
-    console.log('Cached result found');
+
+
+  if (!data) {
+    console.log(tag, 'Fetching details of account from service');
+    let result = await CPoSAccountValidation.accountValidation(request);
+    if (result.systemError) {
+      //system error, e.g bank not available
+      let statusCode = result.data && result.data.status;
+      throw new Error('Account Validation System Error - ' + statusCode);
+    } else if (!result.data || (typeof result.data) !== 'object') {
+      //highly unlikely, but nice to have
+      throw new Error('Empty account data returned');
+    } else if (result.data.status !== '00') {
+      //definitely a validation error if account is not available
+      return result;
+    } else {
+      //cache in background
+      cacheResult(request, result.data);
+      //success or name validation failed
+      if (result.valid || (result.error && result.error === 'NAME_MISMATCH')) {
+        return result;
+      }
+    }
+
+    //now we do offline.
+    data = result.data;
+    console.log(tag, 'Server-side error returned :: ', result.error.code);
+  } else {
+    console.log(tag, 'Cached result found');
+  }
+
+  //begin offline checks
+  let currentDataHash = objectHash(data);
+  if (!doNameMatch(request, data)) {
+    return Utils.generateResponse(false, data, 'NAME_MISMATCH');
+  }
+
+  if (data.bvn) {
     if (!doBvnMatch(request, data)) {
       return Utils.generateResponse(false, data, 'BVN_MISMATCH');
     }
-
-    if (!doNameMatch(request, data)) {
-      return Utils.generateResponse(false, data, 'NAME_MISMATCH');
-    }
-
-    console.log('Result cached, returning cached result: ', request.accountNumber, '-', request.bankCode);
-    return Utils.generateResponse(true, data, null);
   } else {
-    console.log('No cached result, calling service...');
-    let result = await CPoSAccountValidation.accountValidation(request);
-    if (result.systemError) {
-      throw new Error('Account Validation System Error!');
+    console.log(tag, 'BVN not returned, performing resolution');
+    let bvnData = await BVNService.resolve(request.bvn);
+    if (!bvnData) {
+      return Utils.generateResponse(false, data, 'BVN_NOT_FOUND');
     }
 
-    if (result.data && result.data.status === '00') {
-      console.log('Caching result returned');
-      AccountValidationCache.saveResult(request, result.data)
-        .then(function (save) {
-          console.log('Result has been saved.', save._id);
-        });
+    if (!validateWithBvnData(bvnData, data)) {
+      return Utils.generateResponse(false, data, 'BVN_MISMATCH');
     }
 
-    return result;
+    data.bvn = request.bvn;
   }
+
+  let hashAfter = objectHash(data);
+  if (currentDataHash !== hashAfter) {
+    console.log(tag, `Data hash has changed, caching result`);
+    cacheResult(request, data);
+  }
+
+  return Utils.generateResponse(true, data, null);
+};
+
+const validateWithBvnData = (bvnData, neData) => {
+  let bvnDataNames = [bvnData.firstName, bvnData.middleName, bvnData.lastName].filter((n) => !!n).join(' ');
+  let bankNames = `${neData.otherNames} ${neData.lastName}`;
+  return u_.doNameMatch(bankNames, bvnDataNames).matches >= MIN_NAME_MATCHES;
 };
 
 module.exports.validateAccount = function (req, res) {
