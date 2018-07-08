@@ -29,6 +29,7 @@ module.exports.init = function (app) {
 
   //set routes
   require('./routes/bvn')(app);
+  require('./routes/health')(app);
   require('./routes/account')(app);
   require('./routes/nin')(app);
 };
