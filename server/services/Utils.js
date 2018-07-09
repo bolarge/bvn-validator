@@ -5,7 +5,7 @@
 "use strict";
 
 var ErrorList = require('../models/ErrorList'),
-    _ = require('lodash');
+  _ = require('lodash');
 
 module.exports = {
   randomString: function (length, chars) {
@@ -36,8 +36,9 @@ module.exports = {
 
   generateResponse: function (valid, data, errorCode) {
 
-    var response = {
+    const response = {
       valid: valid,
+      systemError: false,
       data: data,
       error: {}
     };

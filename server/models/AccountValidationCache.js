@@ -13,13 +13,13 @@ const mongoose = require('mongoose'),
   cacheValidityDays = process.env.ACC_VALIDATION_CACHE_VALIDITY_DAYS || 30;
 
 
-var storeSchema = mongoose.Schema({
+const storeSchema = mongoose.Schema({
   hash: {
     type: String,
     unique: true,
     required: true
   },
-  result: {
+  data: {
     type: Object
   },
   bankCode: {
@@ -68,6 +68,7 @@ module.exports.getCachedResult = function (request) {
   request = preprocess(request);
   const hash = getRequestHash(request);
 
+  console.log(hash, 'Account details: ', request.bankCode, '-', request.accountNumber);
   const deferred = q.defer();
 
   if (request.skipCache) {
@@ -75,11 +76,14 @@ module.exports.getCachedResult = function (request) {
       deferred.resolve(null);
     }, 10);
   } else {
-    AccountValidationCache.findOne({hash: hash, createdAt: {$gte: moment().subtract(cacheValidityDays, 'day').toDate()}}, function (err, cached) {
+    AccountValidationCache.findOne({
+      hash: hash,
+      createdAt: {$gte: moment().subtract(cacheValidityDays, 'day').toDate()}
+    }, function (err, cached) {
       if (err) {
         deferred.reject(err);
       } else {
-        deferred.resolve(cached && cached.result ? cached.result : null);
+        deferred.resolve(cached && cached.data ? cached.data : null);
       }
     });
   }
@@ -87,20 +91,29 @@ module.exports.getCachedResult = function (request) {
   return deferred.promise;
 };
 
-module.exports.saveResult = function (request, result) {
+module.exports.saveResult = function (request, data) {
 
   request = preprocess(request);
   const hash = getRequestHash(request);
 
   const deferred = q.defer();
 
-  AccountValidationCache.findOneAndUpdate({hash: hash}, {
-    bankCode: request.bankCode,
-    accountNumber: request.accountNumber,
-    result: result,
-    createdAt: Date.now()
+  AccountValidationCache.findOneAndUpdate({
+    $or: [
+      {hash: hash},
+      {bankCode: request.bankCode, accountNumber: request.accountNumber}
+    ]
   }, {
-    upsert: true
+    $set: {
+      hash,
+      bankCode: request.bankCode,
+      accountNumber: request.accountNumber,
+      data,
+      createdAt: Date.now()
+    }
+  }, {
+    upsert: true,
+    new: true
   }, function (err, updated) {
     if (err) {
       deferred.reject(err);
