@@ -56,12 +56,15 @@ const cacheResult = (request, data) => {
     });
 };
 
-const performAccountValidation = async function (request) {
+const performAccountValidation = async function (request, forceReload = false) {
 
   const tag = `${request.bankCode} - ${request.accountNumber}`;
 
-  console.log(tag, 'Checking if the request is cached');
-  let data = await AccountValidationCache.getCachedResult(request);
+  let data = null;
+  if (!forceReload) {
+    console.log(tag, 'Checking if the request is cached');
+    data = await AccountValidationCache.getCachedResult(request);
+  }
 
 
   if (!data) {
@@ -143,7 +146,7 @@ module.exports.validateAccount = function (req, res) {
     return res.status(400).json(Utils.generateResponse(false, {}, validRequest.message));
   }
 
-  return performAccountValidation(validRequest.data)
+  return performAccountValidation(validRequest.data, req.query.forceReload === '1')
     .then((result) => res.status(200).json(result))
     .catch(function (err) {
       console.error(err.message);
