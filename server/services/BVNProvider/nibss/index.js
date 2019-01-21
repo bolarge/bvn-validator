@@ -11,7 +11,7 @@ const moment = require('moment');
 const createPhantomPool = require('phantom-pool');
 const rp = require('request-promise');
 
-const MAX_SOCKETS = parseInt(process.env.BVN_MAX_REQUESTS) || 16;
+const MAX_SOCKETS = parseInt(process.env.BVN_MAX_REQUESTS) || 8;
 
 
 const baseUrl = config.nibss.portal.baseUrl;
@@ -68,8 +68,7 @@ function makeRequest(path, method, formData) {
   }
 
   if (cookie) {
-    console.log('Getting cookie', cookie);
-    options.headers.Cookie = cookie;
+    options.headers.Cookie = `${cookie}; cb_onefi=${Math.random()}`;
   }
 
   return rp(options);
@@ -291,6 +290,6 @@ const clearPool = function (event) {
   return true;
 };
 
-// [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
-//   process.on(eventType, clearPool.bind(null, eventType));
-// });
+[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
+  process.on(eventType, clearPool.bind(null, eventType));
+});
