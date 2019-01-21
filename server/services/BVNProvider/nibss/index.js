@@ -11,7 +11,7 @@ const moment = require('moment');
 const createPhantomPool = require('phantom-pool');
 const rp = require('request-promise');
 
-const MAX_SOCKETS = parseInt(process.env.BVN_MAX_REQUESTS) || 10;
+const MAX_SOCKETS = parseInt(process.env.BVN_MAX_REQUESTS) || 16;
 
 
 const baseUrl = config.nibss.portal.baseUrl;
@@ -40,7 +40,7 @@ const httpsAgent = new https.Agent({
   keepAlive: true,
   maxSockets: MAX_SOCKETS,
   keepAliveMsecs: 15000,
-  timeout: 60000
+  timeout: 15000
 });
 
 
@@ -291,6 +291,6 @@ const clearPool = function (event) {
   return true;
 };
 
-[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
-  process.on(eventType, clearPool.bind(null, eventType));
-});
+// [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
+//   process.on(eventType, clearPool.bind(null, eventType));
+// });
