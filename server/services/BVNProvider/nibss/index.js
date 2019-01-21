@@ -11,6 +11,8 @@ const moment = require('moment');
 const createPhantomPool = require('phantom-pool');
 const rp = require('request-promise');
 
+const MAX_SOCKETS = parseInt(process.env.BVN_MAX_REQUESTS) || 10;
+
 
 const baseUrl = config.nibss.portal.baseUrl;
 const POOL = createPhantomPool(config.nibss.portal.poolConfig);
@@ -34,11 +36,17 @@ const isUrls = (str) => {
   return /http/.test(str);
 };
 
-const httpsAgent = new https.Agent({keepAlive: true});
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: MAX_SOCKETS,
+  keepAliveMsecs: 15000,
+  timeout: 60000
+});
+
 
 function makeRequest(path, method, formData) {
   const options = {
-    timeout: 60000,
+    pool: httpsAgent,
     agent: httpsAgent,
     uri: baseUrl + path,
     method: method,
