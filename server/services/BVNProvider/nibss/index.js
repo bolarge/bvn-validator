@@ -83,6 +83,15 @@ const pageLoad = async (page, isCond, errorMessage, checks = 0) => {
 
 const processLogin = async () => {
   let {page} = await initPage();
+
+  page.property('onResourceRequested', function (requestData, networkRequest) {
+    console.log('Loading...', requestData.url);
+    var shouldStop = /\.(css|js)$/.test(requestData.url);
+    if (shouldStop) {
+      networkRequest.abort();
+    }
+  });
+
   const status = await page.open(baseUrl + '/bvnnbo/bank/user/search');
   let startTime = Date.now();
 
