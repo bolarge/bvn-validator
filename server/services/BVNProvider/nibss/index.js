@@ -2,16 +2,16 @@
  * Created by nonami on 24/04/2018.
  */
 const Promise = require('bluebird');
+const httpLib = require('../../../lib/http-lib');
+
 const PageChecker = require('./pageChecker');
 const parsers = require('./resultPageParsers');
 const config = require('../../../../config');
-const https = require('https');
+
 const TIMEOUT_SECONDS = config.nibss.portal.timeout; // Seconds per page load
 const moment = require('moment');
 const createPhantomPool = require('phantom-pool');
 const rp = require('request-promise');
-
-const MAX_SOCKETS = parseInt(process.env.BVN_MAX_REQUESTS) || 8;
 
 
 const baseUrl = config.nibss.portal.baseUrl;
@@ -36,42 +36,15 @@ const isUrls = (str) => {
   return /http/.test(str);
 };
 
-const httpsAgent = new https.Agent({
-  keepAlive: true,
-  maxSockets: MAX_SOCKETS,
-  keepAliveMsecs: 15000,
-  timeout: 15000
-});
-
-
-function makeRequest(path, method, formData) {
-  const options = {
-    pool: httpsAgent,
-    agent: httpsAgent,
-    uri: baseUrl + path,
-    method: method,
-    followRedirect: true,
-    resolveWithFullResponse: true,
-    transform: redirectOn302,
-    headers: {
-      Pragma: 'no-cache',
-      'Cache-Control': 'no-cache',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/538.1 (KHTML, like Gecko) PhantomJS/2.1.1 Safari/538.1',
-      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-      Referer: baseUrl + '/bvnnbo/bank/user/search',
-    }
-  };
-
-  if (formData) {
-    options.form = formData;
-  }
-
-  if (cookie) {
-    options.headers.Cookie = `${cookie}; cb_onefi=${Math.random()}`;
-  }
-
-  return rp(options);
+function submitFormRequest(path, formData) {
+  return httpLib.postForm(baseUrl + path, formData, {
+    Origin: 'https://bvnvalidationportal.nibss-plc.com.ng',
+    Cookie: `${cookie}`,
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/538.1 (KHTML, like Gecko) PhantomJS/2.1.1 Safari/538.1',
+    Referer: baseUrl + '/bvnnbo/bank/user/search',
+  }).then((data) => {
+    return {body: data}
+  });
 }
 
 
@@ -92,7 +65,6 @@ const processLogin = async () => {
   let {page} = await initPage();
 
   page.property('onResourceRequested', function (requestData, networkRequest) {
-    console.log('Loading...', requestData.url);
     var shouldStop = /\.(css|js)$/.test(requestData.url);
     if (shouldStop) {
       networkRequest.abort();
@@ -161,13 +133,13 @@ const doLogin = () => {
 const doBvnSearch = async (bvn) => {
   console.log(bvn, 'Performing BVN search');
   const formData = {bvn};
-  return makeRequest('/bvnnbo/bank/user/search', 'POST', formData);
+  return submitFormRequest('/bvnnbo/bank/user/search', formData);
 };
 
 
 const doNimcSearch = async (params) => {
   const formData = {idNo: params.idNumber, type: params.idType === 'documentNo' ? '1' : '0'};
-  return makeRequest('/bvnnbo/bank/user/nimc', 'POST', formData);
+  return submitFormRequest('/bvnnbo/bank/user/nimc', formData);
 };
 
 
