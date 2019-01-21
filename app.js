@@ -10,7 +10,7 @@ var express = require('express'),
   mongoose = require('mongoose'),
   passport = require('passport'),
   config = require('./config')
-  ;
+;
 
 
 var worker = require('debug')('worker');
@@ -38,11 +38,11 @@ app.use(methodOverride('X-HTTP-Method-Override'));
 app.use(express.static(__dirname + '/public'));
 
 app.use(function (req, res, next) {
-  console.log('PATH ', req.path, new Date());
+  console.log('PATH ', req.method, req.path, new Date());
   next();
 });
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "X-Requested-With, Authorization");
   next();
