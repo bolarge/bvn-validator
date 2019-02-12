@@ -10,7 +10,7 @@
 
 const mongoose = require('mongoose'),
   debug = require('debug')('db'),
-  config = require('../../config');
+  config = require('../../config')
 
 
 let storeSchema = mongoose.Schema({
@@ -57,7 +57,10 @@ let storeSchema = mongoose.Schema({
   img: {
     type: String
   },
-  extra: {type: Object},
+  isS3img: {
+    type: Boolean
+  },
+  extra: { type: Object },
   createdAt: {
     type: Date,
     default: Date.now
@@ -71,16 +74,15 @@ let BvnCache = mongoose.model('BvnCache', storeSchema);
 module.exports = BvnCache;
 
 module.exports.getCachedResult = function (bvn) {
-  return BvnCache.findOne({bvn: bvn})
+  return BvnCache.findOne({ bvn: bvn })
 };
-
-
 module.exports.saveResult = function (result) {
-  return BvnCache.findOneAndUpdate({bvn: result.bvn}, {$set: result}, {upsert: true, new: true, setDefaultsOnInsert: true})
+  return BvnCache.findOneAndUpdate({ bvn: result.bvn }, { $set: result }, { upsert: true, new: true, setDefaultsOnInsert: true })
     .then((r) => {
       return r;
     })
     .catch((err) => {
       console.error(err);
     });
+
 };

@@ -15,7 +15,9 @@ var express = require('express'),
 
 var worker = require('debug')('worker');
 
-mongoose.connect(config.db.url);
+mongoose.connect(config.db.url,{
+  useMongoClient: true,
+  });
 
 // set our port
 var port = process.env.PORT || 3000;

@@ -250,7 +250,7 @@ module.exports.name = 'nibss';
 
 
 doLogin().then(() => console.log('Login completed'))
-  .catch((err) => console.log('Login failed: ', err));
+ .catch((err) => console.log('Login failed: ', err));
 
 const clearPool = function (event) {
   if (POOL) {

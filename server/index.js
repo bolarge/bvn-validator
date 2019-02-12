@@ -10,6 +10,7 @@ module.exports.init = function (app) {
 
   require('passport').use(new BasicStrategy(
     function (username, password, done) {
+      
       ApiUserModel.findOne({
         username: username
       }, function (err, user) {

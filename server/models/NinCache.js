@@ -46,6 +46,9 @@ let storeSchema = mongoose.Schema({
   img: {
     type: String
   },
+  isS3img: {
+    type: Boolean
+  },
   extra: {type: Object},
   createdAt: {
     type: Date,
