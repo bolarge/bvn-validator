@@ -6,21 +6,18 @@ const MinimumImageStringLength = 20;
 
 
 const s3Client = new S3(options = {
-    accessKeyId: awsConfig.accessKeyId,
-    secretAccessKey: awsConfig.secretAccessKey,
+
     region: awsConfig.region,
-    sslEnabled: true,
-    maxRetries: awsConfig.maxRetries,
+   
 });
 
 
 
-module.exports.validateImage = (imgString, imageidentifier,imgType, result) => {
+module.exports.saveToS3 = (imgString, imageidentifier,imgType, result) => {
 
 
         if (!imgString) {
-            reject ='Image must contain a value.';
-            return  reject;
+            throw new Error('Image must contain a value.');          
         }
 
         var MainImageString = imgString;
@@ -40,8 +37,7 @@ module.exports.validateImage = (imgString, imageidentifier,imgType, result) => {
 
         var FileExtension = MainImageString.substring(MainImageString.indexOf('/') + 1, MainImageString.indexOf(';base64'));
 
-        var date = new Date();
-        var FullPathToFile = 'Pictures'.concat('/',imgType,'/', date.getFullYear(), '/', date.getMonth(), '/', date.getDate(), '/', imageidentifier, '.', FileExtension);
+        var FullPathToFile = 'Pictures'.concat('/',imgType,'/', imageidentifier, '.', FileExtension);
 
 
         var Type = 'image/'.concat(FileExtension);
