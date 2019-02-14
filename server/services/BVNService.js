@@ -5,7 +5,7 @@ const BvnCache = require('../models/BvnCache');
 const Paystack = require('./BVNProvider/Paystack');
 const NIBSS  = require('./BVNProvider/nibss');
 const cfg = require('../../config');
-const ClientImageService = require('../services/ClientImageService');
+const S3ImageService = require('../services/S3ImageService');
 
 
 
@@ -21,8 +21,8 @@ const getBvnInfo = (bvn) => {
   return getProvider().resolveBvn(bvn)
     .then((response) => {
       if (response) {
-        processImageFromProvider(response);
-        
+        saveProviderImageToS3(response);
+        return response;
       }
       return response;
     })
@@ -36,12 +36,13 @@ module.exports.resolve = (bvn, forceReload = false) => {
 
     return BvnCache.getCachedResult(bvn)
     .then(function (result) {
-      if(result!='undefined'){
+      if(result){
 
         if (result.isS3img) {
           return retrieveImageForCache(result);
         } else {
-          return processImageFromProvider(result);
+        saveProviderImageToS3(result);
+        return result;
         }
       }else
       {
@@ -50,30 +51,33 @@ module.exports.resolve = (bvn, forceReload = false) => {
 
   }).catch((err) =>{
     console.log(err);
+    return err.message
 
 });
 };
 
 
 function retrieveImageForCache(result) {
-  return ClientImageService.retrieveImageFromAmazon(result)
+  return S3ImageService.retrieveImageFromAmazon(result)
     .then((s3Response) => {
       result.img = s3Response.response;
       return result;
     }).catch((err) => {
       console.log(err);
+      return result;
     });
 }
 
-function processImageFromProvider(result) {
-  ClientImageService.validateImage(result.img, result.bvn, 'BVN', result)
+function saveProviderImageToS3(result) {
+  return S3ImageService.saveToS3(result.img, result.bvn, 'BVN', result)
     .then((s3Response) => {
       result.isS3img = true;
       result.img = s3Response.key;
       return BvnCache.saveResult(result);
     }).catch((err) => {
       console.log(err);
+      return result;
     });
-  return result;
+  
 }
 

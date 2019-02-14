@@ -10,7 +10,7 @@
 
 const mongoose = require('mongoose'),
   debug = require('debug')('db'),
-  config = require('../../config')
+  config = require('../../config');
 
 
 let storeSchema = mongoose.Schema({
@@ -58,7 +58,8 @@ let storeSchema = mongoose.Schema({
     type: String
   },
   isS3img: {
-    type: Boolean
+    type: Boolean,
+    default: false
   },
   extra: { type: Object },
   createdAt: {

@@ -73,10 +73,7 @@ module.exports.activeBvnProvider = process.env.ACTIVE_BVN_PROVIDER || 'nibss';
 
 
 module.exports.aws = {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     region: process.env.AWS_DEFAULT_REGION || 'us-west-2',
-    pictureS3Bucket: 'client-pictures-staging',
-    pictureBaseUrl: process.env.PICTURE_BASE_URL
+    pictureS3Bucket: 'onefibvnservice-' + (process.env.NODE_ENV !== 'production' ? 'staging' : 'production')
   };
 

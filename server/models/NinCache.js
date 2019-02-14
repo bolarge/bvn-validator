@@ -47,7 +47,8 @@ let storeSchema = mongoose.Schema({
     type: String
   },
   isS3img: {
-    type: Boolean
+    type: Boolean,
+    default: false
   },
   extra: {type: Object},
   createdAt: {

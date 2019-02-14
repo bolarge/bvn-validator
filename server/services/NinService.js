@@ -5,6 +5,7 @@
 const BvnCache = require('../models/BvnCache');
 const NinCache = require('../models/NinCache');
 const NIBSS = require('./BVNProvider/nibss');
+const S3ImageService = require('../services/S3ImageService');
 
 module.exports.fetchNimcData = async (nin, idType, forceReload = false) => {
   if (!forceReload) {
@@ -14,28 +15,28 @@ module.exports.fetchNimcData = async (nin, idType, forceReload = false) => {
       if (cachedNin.isS3img) {
         return retrieveImageForCache(cachedNin);
       } else {
-        return processImageFromProvider(cachedNin);
+        return saveProviderImageToS3(cachedNin);
       }
     }
 
     if (idType === 'nin') {
       const cachedBvn = await BvnCache.findOne({nin});
-      if (!!cachedBvn) {
-
+      if (cachedBvn) {
         if (cachedBvn.isS3img) {
           return retrieveImageForCache(cachedBvn);
         } else {
-          return processImageFromProvider(cachedBvn);
+          saveProviderImageToS3(cachedBvn);
+          return cachedBvn;
         }
-
       }
     }
 
   }
 
   const ninData = await NIBSS.fetchNimcData(nin, idType);
-  if (!!ninData) {
-    processImageFromProvider(ninData);
+  if (ninData) {
+    saveProviderImageToS3(ninData);
+    return ninData;
   }
 
   return ninData;
@@ -43,7 +44,7 @@ module.exports.fetchNimcData = async (nin, idType, forceReload = false) => {
 
 
 function retrieveImageForCache(result) {
-  return ClientImageService.retrieveImageFromAmazon(result)
+  return S3ImageService.retrieveImageFromAmazon(result)
     .then((s3Response) => {
       result.img = s3Response.response;
       return result;
@@ -53,8 +54,8 @@ function retrieveImageForCache(result) {
 }
 
 
-function processImageFromProvider(result) {
-  ClientImageService.validateImage(result.img, result.idNumber, 'NIN', result)
+function saveProviderImageToS3(result) {
+  return S3ImageService.saveToS3(result.img, result.idNumber, 'NIN', result)
     .then((s3Response) => {
       result.isS3img = true;
       result.img = s3Response.key;
@@ -62,5 +63,5 @@ function processImageFromProvider(result) {
     }).catch((err) => {
       console.log(err);
     });
-  return result;
+   
 }
