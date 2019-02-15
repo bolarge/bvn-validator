@@ -4,20 +4,20 @@
 'use strict';
 
 var express = require('express'),
-  app = express(),
-  bodyParser = require('body-parser'),
-  methodOverride = require('method-override'),
-  mongoose = require('mongoose'),
-  passport = require('passport'),
-  config = require('./config')
+    app = express(),
+    bodyParser = require('body-parser'),
+    methodOverride = require('method-override'),
+    mongoose = require('mongoose'),
+    passport = require('passport'),
+    config = require('./config')
 ;
 
 
 var worker = require('debug')('worker');
 
-mongoose.connect(config.db.url,{
-  useMongoClient: true,
-  });
+mongoose.connect(config.db.url, {
+    useMongoClient: true,
+});
 
 // set our port
 var port = process.env.PORT || 3000;
@@ -40,14 +40,14 @@ app.use(methodOverride('X-HTTP-Method-Override'));
 app.use(express.static(__dirname + '/public'));
 
 app.use(function (req, res, next) {
-  console.log('PATH ', req.method, req.path, new Date());
-  next();
+    console.log('PATH ', req.method, req.path, new Date());
+    next();
 });
 
 app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With, Authorization");
-  next();
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With, Authorization");
+    next();
 
 });
 

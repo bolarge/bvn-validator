@@ -5,12 +5,12 @@
 "use strict";
 
 const AccountValidationCache = require('../models/AccountValidationCache'),
-  CPoSAccountValidation = require('../services/CPoSClient'),
-  Utils = require('../services/Utils'),
-  u_ = require('utility-belt'),
-  objectHash = require('object-hash'),
-  _ = require('lodash'),
-  MIN_NAME_MATCHES = 2
+    CPoSAccountValidation = require('../services/CPoSClient'),
+    Utils = require('../services/Utils'),
+    u_ = require('utility-belt'),
+    objectHash = require('object-hash'),
+    _ = require('lodash'),
+    MIN_NAME_MATCHES = 2
 ;
 
 const BVNService = require("../services/BVNService");
@@ -51,9 +51,9 @@ const doBvnMatch = (request, cachedData) => {
 
 const cacheResult = (request, data) => {
   return AccountValidationCache.saveResult(request, data)
-    .then(function (save) {
-      console.log(request.bankCode, '-', request.accountNumber, 'Result has been saved.', save._id);
-    });
+      .then(function (save) {
+        console.log(request.bankCode, '-', request.accountNumber, 'Result has been saved.', save._id);
+      });
 };
 
 const performAccountValidation = async function (request, forceReload = false) {
@@ -147,13 +147,13 @@ module.exports.validateAccount = function (req, res) {
   }
 
   return performAccountValidation(validRequest.data, req.query.forceReload === '1')
-    .then((result) => res.status(200).json(result))
-    .catch(function (err) {
-      console.error(err.message);
-      console.error(err.stack);
-      let response = Utils.generateResponse(false, {}, err.message);
-      response.systemError = true;
-      return res.status(500).json(response);
-    });
+      .then((result) => res.status(200).json(result))
+      .catch(function (err) {
+        console.error(err.message);
+        console.error(err.stack);
+        let response = Utils.generateResponse(false, {}, err.message);
+        response.systemError = true;
+        return res.status(500).json(response);
+      });
 };
 
