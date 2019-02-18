@@ -57,9 +57,8 @@ let storeSchema = mongoose.Schema({
     img: {
         type: String
     },
-    isS3img: {
-        type: Boolean,
-        default: false
+    imgPath: {
+        type: String
     },
     extra: {type: Object},
     createdAt: {

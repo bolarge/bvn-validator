@@ -21,61 +21,73 @@ const getBvnInfo = (bvn) => {
         .then((response) => {
             if (response) {
                 saveProviderImageToS3(response);
-                return response;
             }
             return response;
         })
 };
 
-module.exports.resolve = (bvn, forceReload = false) => {
+module.exports.resolve = async (bvn, forceReload = false) => {
 
     if (forceReload) {
         return getBvnInfo(bvn);
     }
 
-    return BvnCache.getCachedResult(bvn)
-        .then(function (result) {
-            if (result) {
+    try {
+        let result = await BvnCache.getCachedResult(bvn);
+        if (result) {
 
-                if (result.isS3img) {
-                    return retrieveImageForCache(result);
-                } else {
-                    saveProviderImageToS3(result);
-                    return result;
-                }
+            if (result.imgPath) {
+                return retrieveImageForCache(result);
             } else {
-                return getBvnInfo(bvn);
+                saveProviderImageToS3(result);
+                return result;
             }
+        } else {
+            return getBvnInfo(bvn);
+        }
 
-        }).catch((err) => {
-            console.log(err);
-            return err.message
 
-        });
+    } catch (err) {
+
+        console.log(err);
+        return err.message
+
+    }
 };
 
 
-function retrieveImageForCache(result) {
-    return S3ImageService.retrieveImageFromS3(result)
-        .then((s3Response) => {
+async function retrieveImageForCache(result) {
+    try {
+        let s3Response = await S3ImageService.retrieveImageFromS3(result);
+        if (s3Response) {
             result.img = s3Response.response;
-            return result;
-        }).catch((err) => {
-            console.log(err);
-            return result;
-        });
+        }
+    } catch (err) {
+        console.log(err);
+
+    }
+    return result;
 }
 
-function saveProviderImageToS3(result) {
-    return S3ImageService.saveToS3(result.img, result.bvn, 'BVN')
-        .then((s3Response) => {
-            result.isS3img = true;
-            result.img = s3Response.key;
-            return BvnCache.saveResult(result);
-        }).catch((err) => {
-            console.log(err);
-            return result;
-        });
+async function saveProviderImageToS3(result) {
 
+    try {
+        let s3Response = await S3ImageService.saveToS3(result.img, result.bvn);
+        if (s3Response) {
+            result.imgPath = s3Response.key;
+            result.img = null;
+            await saveToDatabase(result);
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+async function saveToDatabase(result) {
+    try {
+        return BvnCache.saveResult(result);
+    } catch (err) {
+        console.log(err);
+    }
 }
 
