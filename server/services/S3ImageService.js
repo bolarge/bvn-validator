@@ -18,7 +18,6 @@ module.exports.saveToS3 = (imgString, imageIdentifier) => {
         throw new Error('Image must contain a value.');
     }
 
-    //const MainImageString = imgString;
 
     if (imgString.length <= MinimumImageStringLength) {
         throw new Error('Image length is too small.');
