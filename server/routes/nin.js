@@ -9,8 +9,8 @@ const NinController = require('../controllers/NinController');
 
 module.exports = function (app) {
 
-  app.get("/oapi/resolveNin/:nin/:idType",
-    require('passport').authenticate('basic', {session: false}),
-    NinController.fetchNimcData
-  );
+    app.get("/oapi/resolveNin/:nin/:idType",
+        require('passport').authenticate('basic', {session: false}),
+        NinController.fetchNimcData
+    );
 };

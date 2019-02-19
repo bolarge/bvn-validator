@@ -3,8 +3,9 @@
  */
 const BvnCache = require('../models/BvnCache');
 const Paystack = require('./BVNProvider/Paystack');
-const NIBSS  = require('./BVNProvider/nibss');
+const NIBSS = require('./BVNProvider/nibss');
 const cfg = require('../../config');
+const S3ImageService = require('../services/S3ImageService');
 
 
 const getProvider = () => {
@@ -19,23 +20,70 @@ const getBvnInfo = (bvn) => {
   return getProvider().resolveBvn(bvn)
     .then((response) => {
       if (response) {
-        BvnCache.saveResult(response);
+        saveProviderImageToS3(response);
       }
       return response;
     })
 };
 
-module.exports.resolve = (bvn, forceReload = false) => {
+module.exports.resolve = async (bvn, forceReload = false) => {
 
   if (forceReload) {
     return getBvnInfo(bvn);
   }
 
-  return BvnCache.getCachedResult(bvn)
-    .then(function(result) {
-      if (result) {
-        return result;
-      }
-      return getBvnInfo(bvn);
-    })
+
+  let result = await BvnCache.getCachedResult(bvn);
+  if (result) {
+
+    if (result.imgPath) {
+      return retrieveImageForCache(result);
+    } else {
+      saveProviderImageToS3(result);
+      return result;
+    }
+  } else {
+    return getBvnInfo(bvn);
+  }
+
+
 };
+
+
+async function retrieveImageForCache(result) {
+  try {
+    let s3Response = await S3ImageService.retrieveImageFromS3(result);
+    if (s3Response) {
+      result.img = s3Response.response;
+      return result;
+    }
+  } catch (err) {
+    console.log(err);
+    return null;
+
+  }
+
+}
+
+async function saveProviderImageToS3(result) {
+
+  try {
+    let s3Response = await S3ImageService.saveToS3(result.img, result.bvn);
+    if (s3Response) {
+      result.imgPath = s3Response.key;
+      result.img = null;
+      await saveToDatabase(result);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function saveToDatabase(result) {
+  try {
+    return BvnCache.saveResult(result);
+  } catch (err) {
+    console.log(err);
+  }
+}
+
