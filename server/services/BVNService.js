@@ -57,32 +57,23 @@ module.exports.resolve = async (bvn, forceReload = false) => {
 
 
 async function retrieveImageForCache(result) {
-  try {
     let s3Response = await S3ImageService.retrieveImageFromS3(result);
     if (s3Response) {
       result.img = s3Response.response;
       return result;
     }
-  } catch (err) {
-    console.log(err);
-    return null;
-
-  }
-
+    
 }
 
 async function saveProviderImageToS3(result) {
 
-  try {
+ 
     let s3Response = await S3ImageService.saveToS3(result.img, result.bvn);
     if (s3Response) {
       result.imgPath = s3Response.key;
       result.img = null;
       await saveToDatabase(result);
-    }
-  } catch (err) {
-    console.log(err);
-  }
+ 
 }
 
 async function saveToDatabase(result) {
