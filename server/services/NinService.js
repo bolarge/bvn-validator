@@ -49,12 +49,12 @@ async function retrieveImageForCache(result) {
     let s3Response = await S3ImageService.retrieveImageFromS3(result);
     if (s3Response) {
       result.img = s3Response.response;
+      return result;
     }
   } catch (err) {
     console.log(err);
-
+    return null;
   }
-  return result;
 }
 
 async function saveProviderImageToS3(result) {
