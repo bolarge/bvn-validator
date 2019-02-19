@@ -45,22 +45,31 @@ module.exports.fetchNimcData = async (nin, idType, forceReload = false) => {
 
 
 async function retrieveImageForCache(result) {
-
+  try {
     let s3Response = await S3ImageService.retrieveImageFromS3(result);
     if (s3Response) {
       result.img = s3Response.response;
       return result;
     }
+  } catch (err) {
+    console.log(err);
+    return null;
+
+  }
+
 }
 
 async function saveProviderImageToS3(result) {
 
-
-  let s3Response = await S3ImageService.saveToS3(result.img, result.idNumber);
-  if (s3Response) {
-    result.imgPath = s3Response.key;
-    result.img = null;
-    await saveToDatabase(result);
+  try {
+    let s3Response = await S3ImageService.saveToS3(result.img, result.idNumber);
+    if (s3Response) {
+      result.imgPath = s3Response.key;
+      result.img = null;
+      await saveToDatabase(result);
+    }
+  } catch (err) {
+    console.log(err);
   }
 }
 
