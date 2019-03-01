@@ -161,8 +161,8 @@ const parseResult = function (res) {
 
   return {
     valid: resp && Array.isArray(resp.RequestStatus)
-    && resp.RequestStatus[0] === "00"
-    && validity === 'VALID',
+      && resp.RequestStatus[0] === "00"
+      && validity === 'VALID',
     reason: reason
   };
 };
