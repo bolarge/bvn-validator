@@ -19,6 +19,12 @@ module.exports.isBvnSearchPage = (content) => {
     return !!el;
 };
 
+module.exports.isPasswordChangePage = (content) => {
+    const jsDom = new JSDOM(content);
+    const el = jsDom.window.document.querySelector('form[action="/bvnnbo/user/firstlogonchangepassword"]');
+    return !!el;
+};
+
 
 module.exports.isNimcSearchPage = (content) => {
     const jsDom = new JSDOM(content);
@@ -28,7 +34,7 @@ module.exports.isNimcSearchPage = (content) => {
 
 
 module.exports.isLoggedInPage = (content) => {
-    return PageChecker.isBvnSearchPage(content) || PageChecker.isNimcSearchPage(content);
+    return PageChecker.isBvnSearchPage(content) || PageChecker.isNimcSearchPage(content) || PageChecker.isPasswordChangePage(content);
 };
 
 
