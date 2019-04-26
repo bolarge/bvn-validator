@@ -84,6 +84,7 @@ module.exports.getCachedResult = function (bvn) {
 };
 
 module.exports.saveResult = function (result) {
+  delete result.__v;
   return BvnCache.findOneAndUpdate({bvn: result.bvn}, {$set: result}, {
     upsert: true,
     new: true,
