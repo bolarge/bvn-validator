@@ -77,6 +77,7 @@ module.exports.getCachedResult = function (idNumber) {
 
 
 module.exports.saveResult = function (result) {
+  delete result.__v;
   return NinCache.findOneAndUpdate({idNumber: result.idNumber}, {$set: result}, {
     upsert: true,
     setDefaultsOnInsert: true
