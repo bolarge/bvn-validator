@@ -3,24 +3,21 @@
  */
 'use strict';
 
-var express = require('express'),
-    app = express(),
-    bodyParser = require('body-parser'),
-    methodOverride = require('method-override'),
-    mongoose = require('mongoose'),
-    passport = require('passport'),
-    config = require('./config')
+const express = require('express'),
+  app = express(),
+  bodyParser = require('body-parser'),
+  methodOverride = require('method-override'),
+  mongoose = require('mongoose'),
+  passport = require('passport'),
+  config = require('./config')
 ;
 
+require('./server/services/rollbar');
 
-var worker = require('debug')('worker');
-
-mongoose.connect(config.db.url, {
-    useMongoClient: true,
-});
+const worker = require('debug')('worker');
 
 // set our port
-var port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
 // connect to our mongoDB database
 // (uncomment after you enter in your own credentials in config/db.js)
@@ -37,17 +34,17 @@ app.use(bodyParser.urlencoded({extended: true}));
 // override with the X-HTTP-Method-Override header in the request. simulate DELETE/PUT
 app.use(methodOverride('X-HTTP-Method-Override'));
 
-app.use(express.static(__dirname + '/public'));
+// app.use(express.static(__dirname + '/public'));
 
 app.use(function (req, res, next) {
-    console.log('PATH ', req.method, req.path, new Date());
-    next();
+  console.log('PATH ', req.method, req.path, new Date());
+  next();
 });
 
 app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With, Authorization");
-    next();
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With, Authorization");
+  next();
 
 });
 
