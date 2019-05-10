@@ -32,7 +32,11 @@ module.exports.fetchNimcData = async (nin, idType, forceReload = false) => {
         const cachedBvn = await BvnCache.findOne({nin});
         if (cachedBvn) {
           if (cachedBvn.imgPath) {
-            return retrieveImageForCache(cachedBvn).then(() => console.log('...Saved NIN Image to S3'));
+            return retrieveImageForCache(cachedBvn)
+                .then((updatedResult) => {
+                console.log('...Retrieved BVN Image from S3');
+                return updatedResult;
+            });
           } else {
             //no need to wait.
             saveProviderImageToS3(cachedBvn, true).then(() => console.log('...Saved to S3'));
@@ -69,8 +73,8 @@ async function retrieveImageForCache(result) {
     }
   } catch (err) {
     console.log(err);
-    return null;
-
+    // Return existing result if S3 pull fails so it's still useable to caller
+    return result;
   }
 
 }
