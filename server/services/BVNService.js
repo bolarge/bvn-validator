@@ -73,8 +73,7 @@ async function retrieveImageForCache(result) {
     }
   } catch (err) {
     console.log(err);
-    return null;
-
+    return result;
   }
 
 }
