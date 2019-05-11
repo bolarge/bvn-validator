@@ -8,6 +8,7 @@ const cfg = require('../../config');
 const S3ImageService = require('../services/S3ImageService');
 const LockService = require('../services/LockService');
 const BVN_TTL_LOCK = 30000; //45 seconds is a long time though
+const _ = require('lodash');
 
 
 const getProvider = () => {
@@ -81,6 +82,7 @@ async function retrieveImageForCache(result) {
 async function saveProviderImageToS3(result) {
   try {
     console.log('Saving image to S3');
+    result = _.cloneDeep(result);
     let s3Response = await S3ImageService.saveToS3(result.img, result.bvn);
     if (s3Response) {
       console.log('Image saved to S3');

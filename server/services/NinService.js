@@ -8,6 +8,7 @@ const NIBSS = require('./BVNProvider/nibss');
 const S3ImageService = require('../services/S3ImageService');
 const LockService = require('../services/LockService');
 const NIMC_SEARCH_LOCK_TIMEOUT = 45000;
+const _ = require('lodash');
 
 module.exports.fetchNimcData = async (nin, idType, forceReload = false) => {
   let lock, lockKey = `nimc-${idType}-${nin}`;
@@ -33,10 +34,10 @@ module.exports.fetchNimcData = async (nin, idType, forceReload = false) => {
         if (cachedBvn) {
           if (cachedBvn.imgPath) {
             return retrieveImageForCache(cachedBvn)
-                .then((updatedResult) => {
+              .then((updatedResult) => {
                 console.log('...Retrieved BVN Image from S3');
                 return updatedResult;
-            });
+              });
           } else {
             //no need to wait.
             saveProviderImageToS3(cachedBvn, true).then(() => console.log('...Saved to S3'));
@@ -81,6 +82,7 @@ async function retrieveImageForCache(result) {
 
 async function saveProviderImageToS3(result, isBvn = false) {
   try {
+    result = _.cloneDeep(result);
     let s3Response = await S3ImageService.saveToS3(result.img, result.idNumber);
     if (s3Response) {
       result.imgPath = s3Response.key;
