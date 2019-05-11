@@ -20,7 +20,9 @@ const getProvider = () => {
 };
 
 const getBvnInfo = async (bvn) => {
+  const startTime = Date.now();
   const response = await getProvider().resolveBvn(bvn);
+  console.log("BVN_RESOLUTION_TIME  = " + (Date.now() - startTime) / 1000.0);
   if (response) {
     //now we have to wait to ensure that we don't query provider twice for concurrent requests
     await saveProviderImageToS3(response).then(() => console.log('Image saved to S3'));

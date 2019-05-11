@@ -48,7 +48,9 @@ module.exports.fetchNimcData = async (nin, idType, forceReload = false) => {
 
     }
 
+    const startTime = Date.now();
     const ninData = await NIBSS.fetchNimcData(nin, idType);
+    console.log("NIMC_" + idType.toUpperCase() + "_RESOLUTION_TIME  = " + (Date.now() - startTime) / 1000.0);
     if (ninData) {
       //we need to wait now, to prevent concurrency issues.
       //so to ensure data is saved before new requests come in.
