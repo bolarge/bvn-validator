@@ -221,7 +221,8 @@ module.exports.resolveBvn = function (req, res) {
       if (!result) {
         return res.status(404).json({message: "BVN not found"})
       }
-      res.json(result)
+        console.log('BVN request:', req.params.bvn, 'by:', req.user.username);
+        res.json(result)
     })
     .catch(function (err) {
       console.error(err.message);
