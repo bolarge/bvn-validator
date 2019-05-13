@@ -5,8 +5,8 @@
 "use strict";
 
 const Q = require("q"),
-  soap = require('soap'),
-  ssm = require("../lib/ssm"),
+  soap = {}, //require('soap'),
+  ssm = {}, //require("../lib/ssm"),
   js2Xml = require("js2xmlparser"),
   debug = require("debug")("bvn"),
   parseString = require('xml2js').parseString,
@@ -221,7 +221,8 @@ module.exports.resolveBvn = function (req, res) {
       if (!result) {
         return res.status(404).json({message: "BVN not found"})
       }
-      res.json(result)
+        console.log('BVN request:', req.params.bvn, 'by:', req.user.username);
+        res.json(result)
     })
     .catch(function (err) {
       console.error(err.message);
