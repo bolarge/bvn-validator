@@ -5,8 +5,8 @@
 "use strict";
 
 const Q = require("q"),
-  soap = {}, //require('soap'),
-  ssm = {}, //require("../lib/ssm"),
+  soap = require('soap'),
+  ssm = require("../lib/ssm"),
   js2Xml = require("js2xmlparser"),
   debug = require("debug")("bvn"),
   parseString = require('xml2js').parseString,
