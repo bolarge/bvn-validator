@@ -184,7 +184,8 @@ module.exports.resolveBvn = async (bvn) => {
       response = await doBvnSearch(bvn);
     }
 
-    if (!cookie || (response && PageChecker.isLoginPage(response.body))) {
+    if (!cookie ||
+        (response && (PageChecker.isLoginPage(response.body) || !PageChecker.isResultPage(response.body)))) {
       await doLogin();
       response = await doBvnSearch(bvn);
     }
