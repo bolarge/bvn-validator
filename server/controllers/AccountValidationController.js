@@ -42,7 +42,9 @@ const validateRequest = function (data, requiredFields) {
 const doNameMatch = (request, cachedData) => {
     const specifiedNames = `${request.firstName} ${request.lastName}`;
     const sourceNames = `${cachedData.otherNames} ${cachedData.lastName}`;
-    return u_.doNameMatch(specifiedNames, sourceNames).matches >= MIN_NAME_MATCHES;
+    return u_.doNameMatch(specifiedNames, sourceNames, {
+      similarityThreshold: 0.85
+    }).matches >= MIN_NAME_MATCHES;
 };
 
 const doBvnMatch = (request, cachedData) => {
