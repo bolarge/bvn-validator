@@ -47,7 +47,11 @@ module.exports.nibss = {
       max: 1,
       min: 1,
       idleTimeoutMillis: 180000,
-      maxUses: 50
+      maxUses: 50,
+      phantomArgs: [
+        ['--ignore-ssl-errors=true', '--disk-cache=true'], {
+          logLevel: 'warn',
+        }]
     }
   }
 };
