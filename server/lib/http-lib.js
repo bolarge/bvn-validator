@@ -18,7 +18,7 @@ const sendRequest = (url, method = 'GET', body = null, headers = {}, redirects =
             port: urlParts.port || (url.startsWith('https://') ? 443 : 80),
             path: urlParts.path,
             method,
-            agent: new https.Agent({keepAlive: false, maxSockets: 1}),
+            agent: new sender.Agent({keepAlive: false, maxSockets: 1}),
             headers
         };
 
