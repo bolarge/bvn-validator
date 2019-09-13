@@ -23,6 +23,19 @@ const ninSchema = {
     'GENDER': 'gender',
 };
 
+
+const dlSchema = {
+    "Driver's Licence No": 'idNumber',
+    'Name': 'name',
+    'Sex': 'sex',
+    'State of Issue': 'stateOfIssue',
+    'Issue Date': 'issueDate',
+    'Expiry Date': 'expiryDate',
+    'Date of Birth': 'dob'
+};
+
 module.exports.bvnSchema = bvnSchema;
 
 module.exports.ninSchema = ninSchema;
+
+module.exports.dlSchema = dlSchema;

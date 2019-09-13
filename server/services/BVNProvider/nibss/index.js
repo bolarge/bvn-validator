@@ -137,6 +137,13 @@ const doBvnSearch = async (bvn) => {
 };
 
 
+const doDlSearch = async (dlNumber) => {
+  console.log(dlNumber, 'Performing DL search');
+  const formData = {dlNumber};
+  return submitFormRequest('/bvnnbo/bank/user/frsc', formData);
+};
+
+
 const doNimcSearch = async (params) => {
   const formData = {idNo: params.idNumber, type: params.idType === 'documentNo' ? '1' : '0'};
   return submitFormRequest('/bvnnbo/bank/user/nimc', formData);
@@ -204,6 +211,49 @@ module.exports.resolveBvn = async (bvn) => {
     }
 
     const result = parsers.parseBvnResult(response.body);
+    result.provider = module.exports.name;
+    return result;
+  } catch (e) {
+    console.error("Failed to complete request:", e.message, e.stack);
+    return Promise.reject(e);
+  }
+
+};
+
+
+/**
+ * Drivers Licence search
+ *
+ * @param dlNumber
+ * @returns {Promise.<*>}
+ */
+module.exports.fetchDlData = async (dlNumber) => {
+  try {
+    let response;
+    if (cookie) {
+      response = await doDlSearch(dlNumber);
+    }
+
+    if (!cookie ||
+        (response && (PageChecker.isLoginPage(response.body) || !PageChecker.isResultPage(response.body)))) {
+      await doLogin();
+      response = await doDlSearch(dlNumber);
+    }
+
+    if (!PageChecker.isResultPage(response.body)) {
+      console.error('Fatal unexpected, DL:', dlNumber, parsers.parseErrorMessage(response.body));
+      return Promise.reject(new Error('Drivers licence Search failed'));
+    }
+
+
+    if (PageChecker.isResultNotFoundPage(response.body)) {
+      const maskedDlNumber = "******" + dlNumber.substr(6);
+      console.log('DL not found:', 'NIBSS:', maskedDlNumber);
+      console.error('Error: ', parsers.parseErrorMessage(response.body));
+      return null;
+    }
+
+    const result = parsers.parseDlResult(response.body);
     result.provider = module.exports.name;
     return result;
   } catch (e) {
