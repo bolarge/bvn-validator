@@ -37,9 +37,6 @@ let storeSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    img: {
-        type: String
-    },
     imgPath: {
         type: String
     },

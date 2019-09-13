@@ -20,19 +20,13 @@ module.exports.fetchDlData = async (idNumber, forceReload = false) => {
         if (!forceReload) {
             const cachedData = await DLCache.getCachedResult(idNumber);
             if (cachedData) {
-                if (cachedData.imgPath) {
-                    return retrieveImageForCache(cachedData);
-                } else {
-                    //no need to wait, we're only updating legacy record.
-                    saveProviderImageToS3(cachedData, true).then(() => console.log('...Saved to S3'));
-                    return cachedData;
-                }
+                return retrieveImageForCache(cachedData);
             }
         }
 
         const startTime = Date.now();
         const dlData = await NIBSS.fetchDlData(idNumber);
-        console.log("NIMC_DL_RESOLUTION_TIME  = " + (Date.now() - startTime) / 1000.0);
+        console.log("DL_RESOLUTION_TIME  = " + (Date.now() - startTime) / 1000.0);
         if (dlData) {
             await saveProviderImageToS3(dlData, false).then(() => console.log('...Saved DL image to S3'));
         }
