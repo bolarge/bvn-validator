@@ -33,4 +33,5 @@ module.exports.init = function (app) {
     require('./routes/health')(app);
     require('./routes/account')(app);
     require('./routes/nin')(app);
+    require('./routes/dl')(app);
 };

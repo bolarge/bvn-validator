@@ -59,5 +59,6 @@ module.exports.isResultNotFoundPage = (content) => {
     return /No results found/i.test(content)
         || /Invalid BVN/i.test(content)
         || /Record not found/i.test(content)
-        || /contact your bank/i.test(content);
+        || /contact your bank/i.test(content)
+        || /Verification could not be completed/i.test(content);
 };
