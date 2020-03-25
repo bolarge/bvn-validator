@@ -5,8 +5,7 @@
 
 const mongoose = require('mongoose'),
   dbConfig = require('../../config').db,
-  Rollbar = require('../services/rollbar'),
-  LOGGER = require('log4js').getLogger('db-factory');
+  Rollbar = require('../services/rollbar');
 
 
 
@@ -24,30 +23,30 @@ module.exports.create = function (name, config) {
   let hasConnected = false, isOnline = false;
 
   connection.on('error', function (err) {
-    LOGGER.error('Connection could not be established, error: ', err);
-    Rollbar.instance().handleError(err);
+    console.error('Connection could not be established, error: ', err);
+    Rollbar.instance().error(err);
     if (!hasConnected) {
-      LOGGER.error('Could not connect to DB, exiting.');
+      console.error('Could not connect to DB, exiting.');
       process.exit(1);
     }
   });
 
   connection.on('connecting', function () {
-    LOGGER.info(`DB (${name}) attempting to connect...`);
+    console.info(`DB (${name}) attempting to connect...`);
   });
 
   connection.on('reconnected', function () {
     isOnline = true;
-    LOGGER.warn(`DB (${name}) connection has been re-established.`);
+    console.warn(`DB (${name}) connection has been re-established.`);
   });
 
   connection.on('disconnected', function () {
     isOnline = false;
-    LOGGER.error(`DB (${name}) connection was lost.`);
+    console.error(`DB (${name}) connection was lost.`);
   });
 
   connection.on('open', function () {
-    LOGGER.info(`DB (${name}) connection has been established.`);
+    console.info(`DB (${name}) connection has been established.`);
     isOnline = hasConnected = true;
   });
 

@@ -4,13 +4,13 @@
 require('mongoose').Promise = require('bluebird');
 
 module.exports.db = {
-  url: process.env.MONGODB_URL || 'mongodb://localhost:27017/bvn_service',
-    options: {
-        useNewUrlParser: true,
-        useCreateIndex: true,
-        useFindAndModify: false,
-        useUnifiedTopology: true
-    }
+  url: process.env.MONGODB_URL || 'mongodb+srv://staginguser:nwx1KOyH1yUDxSuG@staging-jnyqv.mongodb.net/bvnservice_staging?retryWrites=true&w=majority',
+  options: {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+    useUnifiedTopology: true
+  }
 };
 
 module.exports.caching = {
