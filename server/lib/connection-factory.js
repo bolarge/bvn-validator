@@ -25,7 +25,7 @@ module.exports.create = function (name, config) {
 
   connection.on('error', function (err) {
     LOGGER.error('Connection could not be established, error: ', err);
-    Rollbar.instance().handleError(err);
+    Rollbar.instance().error(err);
     if (!hasConnected) {
       LOGGER.error('Could not connect to DB, exiting.');
       process.exit(1);
