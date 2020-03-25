@@ -5,12 +5,12 @@ require('mongoose').Promise = require('bluebird');
 
 module.exports.db = {
   url: process.env.MONGODB_URL || 'mongodb://localhost:27017/bvn_service',
-  options: {
-    server: {
-      auto_reconnect: true,
-      reconnectTries: 3600
+    options: {
+        useNewUrlParser: true,
+        useCreateIndex: true,
+        useFindAndModify: false,
+        useUnifiedTopology: true
     }
-  }
 };
 
 module.exports.caching = {
