@@ -1,7 +1,4 @@
-"use strict";
-
 const phoneSearch = require('../services/phoneSearch');
-
 
 module.exports.searchPhoneNumber = function (req, res) {
   const phoneNumber = req.params.phoneNumber;

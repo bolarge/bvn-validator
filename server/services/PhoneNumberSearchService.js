@@ -1,6 +1,3 @@
-/**
- * Created by nonami on 12/09/2019.
- */
 const PhoneSearchCache = require('../models/PhoneSearchCache');
 const NIBSS = require('./BVNProvider/nibss');
 const LockService = require('../services/LockService');
