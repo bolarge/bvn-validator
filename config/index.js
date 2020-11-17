@@ -4,7 +4,7 @@
 require('mongoose').Promise = require('bluebird');
 
 module.exports.db = {
-  url: process.env.MONGODB_URL || 'mongodb+srv://staginguser:nwx1KOyH1yUDxSuG@staging-jnyqv.mongodb.net/bvnservice_staging?retryWrites=true&w=majority',
+  url: process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/bvnservice_staging?retryWrites=true&w=majority',
   options: {
     useNewUrlParser: true,
     useCreateIndex: true,
@@ -53,7 +53,8 @@ module.exports.nibss = {
           logLevel: 'warn',
         }]
     }
-  }
+  },
+  phoneValidationUrl: process.env.NIBSS_PHONE_VALIDATION_URL || 'http://196.6.103.10:9115/nibss/phone/validation/search'
 };
 
 module.exports.authentication = {

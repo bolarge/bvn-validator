@@ -34,4 +34,5 @@ module.exports.init = function (app) {
     require('./routes/account')(app);
     require('./routes/nin')(app);
     require('./routes/dl')(app);
+    require('./routes/phoneSearch')(app);
 };

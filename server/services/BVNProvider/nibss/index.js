@@ -192,7 +192,7 @@ module.exports.resolveBvn = async (bvn) => {
     }
 
     if (!cookie ||
-        (response && (PageChecker.isLoginPage(response.body) || !PageChecker.isResultPage(response.body)))) {
+      (response && (PageChecker.isLoginPage(response.body) || !PageChecker.isResultPage(response.body)))) {
       await doLogin();
       response = await doBvnSearch(bvn);
     }
@@ -235,7 +235,7 @@ module.exports.fetchDlData = async (dlNumber) => {
     }
 
     if (!cookie ||
-        (response && (PageChecker.isLoginPage(response.body) || !PageChecker.isResultPage(response.body)))) {
+      (response && (PageChecker.isLoginPage(response.body) || !PageChecker.isResultPage(response.body)))) {
       await doLogin();
       response = await doDlSearch(dlNumber);
     }
@@ -296,6 +296,56 @@ module.exports.fetchNimcData = async (idNumber, idType) => {
   return result;
 
 };
+
+/**
+ * Type definitions
+ * @typedef {{ status: String, searchDate: Date, message: String, data: NibssCustomerBasicInfo[] | undefined}} NibssPhoneSearchResult
+ * @typedef {{ firstname: String, middlename: String, surname: String, phoneNumber: String, dateOfBirth: String, Reserved:String}} NibssCustomerBasicInfo
+ *
+ */
+
+/**
+ * Get basic information of customers based on phone number
+ * @param phoneNumber {string}
+ *
+ * @return {Promise<NibssPhoneSearchResult>}
+ */
+module.exports.fetchCustomerDetailsByPhone = (phoneNumber) => {
+  const options = {
+    url: config.nibss.phoneValidationUrl,
+    method: 'POST',
+    json: {
+      "phone": phoneNumber
+    }
+  };
+  return rp(options)
+    .then(response => toPhoneSearchData(phoneNumber, response));
+};
+
+const transformRecords = (arrayRecords) => {
+  const NOT_APPLICABLE = "N/A";
+  const cleanData = (data) => (data === NOT_APPLICABLE) ? undefined : data;
+  return arrayRecords.map(record => ({
+    firstName: cleanData(record.firstname),
+    middleName: cleanData(record.middlename),
+    lastName: cleanData(record.surname),
+    phoneNumber: cleanData(record.phoneNumber),
+    dob: cleanData(record.dateOfBirth),
+  }));
+};
+
+/**
+ *
+ * @param phoneNumber {String}
+ * @param result {NibssPhoneSearchResult}
+ */
+const toPhoneSearchData = (phoneNumber, result) => ({
+  phoneNumber: phoneNumber,
+  matchedRecords: Array.isArray(result.data) ? transformRecords(result.data) : undefined,
+  provider: module.exports.name,
+  providerMessage: result.message,
+  providerStatusCode: result.status
+});
 
 module.exports.name = 'nibss';
 
