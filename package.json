@@ -5,6 +5,9 @@
   "author": {
     "name": "mean scaffold"
   },
+  "scripts": {
+    "dev": "node app.js"
+  },
   "mean": "0.5.5",
   "dependencies": {
     "aws-sdk": "^2.400.0",

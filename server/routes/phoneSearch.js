@@ -5,4 +5,9 @@ module.exports = function (app) {
     require('passport').authenticate('basic', {session: false}),
     PhoneSearchController.searchPhoneNumber
   );
+
+  app.post("/oapi/phone-search",
+    require('passport').authenticate('basic', {session: false}),
+    PhoneSearchController.validateCustomerByPhoneNumber
+  );
 };
