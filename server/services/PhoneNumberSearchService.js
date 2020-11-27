@@ -11,7 +11,7 @@ const cacheResult = (result) => {
 };
 
 const fetchPhoneSearchData = async (phoneNumber, forceReload = false) => {
-  let lock, lockKey = `phone-search-${PhoneSearchCache}`;
+  let lock, lockKey = `phone-search-${phoneNumber}`;
 
   try {
     lock = await LockService.acquireLock(lockKey, PHONE_SEARCH_LOCK_TIMEOUT, PHONE_SEARCH_LOCK_TIMEOUT);
@@ -40,9 +40,9 @@ const fetchPhoneSearchData = async (phoneNumber, forceReload = false) => {
   }
 };
 
-const phoneNumberHasMatchingValidAccount = async (matchedAccountRecords, userData) => {
+const phoneNumberHasMatchingValidAccount = (matchedAccountRecords, userData) => {
   for (let record of matchedAccountRecords) {
-    let fullNames = [userData.lastname, userData.firstname, userData.middlename];
+    let fullNames = [userData.lastName, userData.firstName, userData.middleName];
     let accountNames = [record.firstName, record.middleName, record.lastName];
     if (Utils.doNameMatch(fullNames, accountNames)) {
       return true;
@@ -52,14 +52,15 @@ const phoneNumberHasMatchingValidAccount = async (matchedAccountRecords, userDat
 };
 
 const validateCustomerByPhoneNumber = async (userData, forceReload) => {
-  let matchedAccountRecords = [];
+  let matchedAccountRecords;
   try {
-    matchedAccountRecords = await fetchPhoneSearchData(userData.phoneNumber, forceReload);
+    const record = await fetchPhoneSearchData(userData.phoneNumber, forceReload);
+    matchedAccountRecords = record.matchedRecords;
   } catch (err) {
     console.log("PHONE_SEARCH_ERROR", userData.phoneNumber, userData.clientId);
   }
   return Utils.generateResponse(
-    phoneNumberHasMatchingValidAccount(matchedAccountRecords, userData),
+    phoneNumberHasMatchingValidAccount(matchedAccountRecords || [], userData),
     matchedAccountRecords
   );
 };
