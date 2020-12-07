@@ -40,7 +40,7 @@ const doNameMatch = (request, cachedData) => {
 };
 
 const doBvnMatch = (request, cachedData) => {
-  return request.bvn === cachedData.bvn;
+    return _.trim(request.bvn) === _.trim(cachedData.bvn);
 };
 
 const cacheResult = (request, data) => {
