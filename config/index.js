@@ -53,7 +53,8 @@ module.exports.nibss = {
           logLevel: 'warn',
         }]
     }
-  }
+  },
+  phoneValidationUrl: process.env.NIBSS_PHONE_VALIDATION_URL || 'http://196.6.103.10:9115/nibss/phone/validation/search'
 };
 
 module.exports.authentication = {
