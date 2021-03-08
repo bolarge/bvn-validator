@@ -79,7 +79,7 @@ const performAccountValidation = async function (request, forceReload = false) {
       //cache in background
       cacheResult(request, result.data);
       //success or name validation failed
-      if (result.valid || (result.error && result.error === 'NAME_MISMATCH')) {
+      if (result.valid || (result.error && result.error && result.error.code === 'NAME_MISMATCH')) {
         return result;
       }
     }
