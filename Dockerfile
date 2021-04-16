@@ -6,7 +6,7 @@ RUN apk add openssh
 
 ADD docker-ssh /root/.ssh
 RUN ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts && \
-        chmod 0600 /root/.ssh/bitbucket && \
+        chmod 0600 ~/.ssh/bitbucket && \
         ssh git@bitbucket.org
 
 # Add support for https on wget
