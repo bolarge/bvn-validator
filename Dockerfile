@@ -10,10 +10,10 @@ RUN ls -al ~/ && \
         cd ~/.ssh && \
         pwd && \
         ls -al ~/.ssh
-RUN ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts && \
-        chown root:$USER ~/.ssh/config \
-        chmod 644 ~/.ssh/config \
-        chmod 0600 ~/.ssh/bitbucket && \
+RUN ssh-keyscan -t rsa bitbucket.org >> /root/.ssh/known_hosts && \
+        chown root:$USER /root/.ssh/config \
+        chmod 644 /root/.ssh/config \
+        chmod 0600 /root/.ssh/bitbucket && \
         ssh git@bitbucket.org
 
 # Add support for https on wget
