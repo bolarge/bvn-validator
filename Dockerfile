@@ -4,7 +4,7 @@ LABEL Carbon Developers <developers@getcarbon.co>
 
 RUN apk add openssh && mkdir ~/.ssh
 
-ADD docker-ssh ~/.ssh
+ADD docker-ssh ~/.ssh/
 RUN ls -al ~/ && \
         echo next check && \
         ls -al ~/.ssh
