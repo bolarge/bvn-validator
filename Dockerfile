@@ -7,6 +7,8 @@ RUN apk add openssh && mkdir ~/.ssh
 ADD docker-ssh ~/.ssh/
 RUN ls -al ~/ && \
         echo next check && \
+        cd ~/.ssh && \
+        pwd && \
         ls -al ~/.ssh
 RUN ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts && \
         chown root:$USER ~/.ssh/config \
