@@ -11,8 +11,8 @@ RUN ls -al ~/ && \
         pwd && ls -al && \
         ls -al ~/.ssh
 RUN ssh-keyscan -t rsa bitbucket.org >> /root/.ssh/known_hosts && \
-        chown root:$USER /root/.ssh/config \
-        chmod 644 /root/.ssh/config \
+        chown root:$USER /root/.ssh/config && \
+        chmod 644 /root/.ssh/config && \
         chmod 0600 /root/.ssh/bitbucket && \
         ssh git@bitbucket.org
 
