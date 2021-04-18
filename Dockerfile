@@ -8,7 +8,7 @@ ADD docker-ssh /root/.ssh
 RUN ls -al ~/ && \
         echo next check && \
         cd ~/.ssh && \
-        pwd && \
+        pwd && ls -al && \
         ls -al ~/.ssh
 RUN ssh-keyscan -t rsa bitbucket.org >> /root/.ssh/known_hosts && \
         chown root:$USER /root/.ssh/config \
