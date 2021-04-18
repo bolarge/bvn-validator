@@ -2,10 +2,12 @@ FROM 334236250727.dkr.ecr.us-west-2.amazonaws.com/carbon-golden-containers/node:
 
 LABEL Carbon Developers <developers@getcarbon.co>
 
-RUN apk add openssh
+RUN apk add openssh && mkdir ~/.ssh
 
 ADD docker-ssh ~/.ssh
-RUN ls -al ~/
+RUN ls -al ~/ && \
+        echo next check && \
+        ls -al ~/.ssh
 RUN ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts && \
         chown root:$USER ~/.ssh/config \
         chmod 644 ~/.ssh/config \
