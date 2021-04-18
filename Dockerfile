@@ -5,7 +5,8 @@ LABEL Carbon Developers <developers@getcarbon.co>
 RUN apk add openssh
 
 ADD docker-ssh ~/.ssh
-RUN ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts && \
+RUN ls -al \
+        ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts && \
         chown root:$USER ~/.ssh/config \
         chmod 644 ~/.ssh/config \
         chmod 0600 ~/.ssh/bitbucket && \
