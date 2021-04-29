@@ -1,6 +1,8 @@
-FROM 334236250727.dkr.ecr.us-west-2.amazonaws.com/carbon-golden-containers/node:v12
+FROM 334236250727.dkr.ecr.us-west-2.amazonaws.com/carbon-golden-containers/node:v8
 
 LABEL Carbon Developers <developers@getcarbon.co>
+
+USER root
 
 RUN apk add openssh && mkdir ~/.ssh
 
@@ -42,5 +44,7 @@ RUN npm install --production && \
 COPY . /bvn-validation-service
 
 ENV PORT=3005
+
+# USER appuser
 
 CMD pm2 start app.js -i 1 --no-daemon --name app -o /logs/out.log -e /logs/err.log
