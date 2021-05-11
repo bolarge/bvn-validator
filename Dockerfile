@@ -1,22 +1,21 @@
+# syntax=docker/dockerfile:1.0.0-experimental
 FROM 334236250727.dkr.ecr.us-west-2.amazonaws.com/carbon-golden-containers/node:v8
 
 LABEL Carbon Developers <developers@getcarbon.co>
 
 USER root
 
-RUN apk add openssh && mkdir ~/.ssh
+RUN apk add --no-cache openssh-client
 
-ADD docker-ssh /root/.ssh
-RUN ls -al ~/ && \
-        echo next check && \
-        cd ~/.ssh && \
-        pwd && ls -al && \
-        ls -al ~/.ssh
-RUN ssh-keyscan -t rsa bitbucket.org >> /root/.ssh/known_hosts && \
-        chown root:$USER /root/.ssh/config && \
-        chmod 644 /root/.ssh/config && \
-        chmod 0600 /root/.ssh/bitbucket && \
-        ssh git@bitbucket.org
+RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
+
+# ADD docker-ssh /root/.ssh
+
+# RUN ssh-keyscan -t rsa bitbucket.org >> /root/.ssh/known_hosts && \
+#         chown root:$USER /root/.ssh/config && \
+#         chmod 644 /root/.ssh/config && \
+#         chmod 0600 /root/.ssh/bitbucket && \
+#         ssh git@bitbucket.org
 
 # Add support for https on wget
 RUN apk update && apk add --no-cache wget && apk --no-cache add openssl wget && apk add ca-certificates && update-ca-certificates
@@ -38,13 +37,13 @@ WORKDIR /bvn-validation-service
 
 ADD package.json /bvn-validation-service/package.json
 ADD package-lock.json /bvn-validation-service/package-lock.json
-RUN npm install --production && \
-  npm install -g phantomjs-prebuilt
+RUN --mount=type=ssh,id=bitbucket npm install --production && \
+        npm install -g phantomjs-prebuilt
 
 COPY . /bvn-validation-service
 
 ENV PORT=3005
 
-# USER appuser
+USER appuser
 
 CMD pm2 start app.js -i 1 --no-daemon --name app -o /logs/out.log -e /logs/err.log

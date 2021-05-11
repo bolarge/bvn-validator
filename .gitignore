@@ -3,3 +3,4 @@ node_modules
 *.bak
 keys/*.key
 dockerenv
+id_rsa
