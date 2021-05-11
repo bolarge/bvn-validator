@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1.0.0-experimental
+
 FROM 334236250727.dkr.ecr.us-west-2.amazonaws.com/carbon-golden-containers/node:v8
 
 LABEL Carbon Developers <developers@getcarbon.co>
@@ -8,14 +9,6 @@ USER root
 RUN apk add --no-cache openssh-client
 
 RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
-
-# ADD docker-ssh /root/.ssh
-
-# RUN ssh-keyscan -t rsa bitbucket.org >> /root/.ssh/known_hosts && \
-#         chown root:$USER /root/.ssh/config && \
-#         chmod 644 /root/.ssh/config && \
-#         chmod 0600 /root/.ssh/bitbucket && \
-#         ssh git@bitbucket.org
 
 # Add support for https on wget
 RUN apk update && apk add --no-cache wget && apk --no-cache add openssl wget && apk add ca-certificates && update-ca-certificates
