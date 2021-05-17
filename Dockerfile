@@ -31,9 +31,6 @@ WORKDIR /bvn-validation-service
 ADD package.json /bvn-validation-service/package.json
 ADD package-lock.json /bvn-validation-service/package-lock.json
 
-# RUN --mount=type=ssh,id=bitbucket npm install --production && \
-#         npm install -g phantomjs-prebuilt
-
 RUN --mount=type=ssh npm install --production && \
         npm install -g phantomjs-prebuilt
 
