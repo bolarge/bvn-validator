@@ -68,7 +68,8 @@ module.exports = {
     specifiedNames = specifiedNames.filter((a) => !!a).join(' ');
     sourceNames = sourceNames.filter((a) => !!a).join(' ');
     return u_.doNameMatch(specifiedNames, sourceNames, {
-      similarityThreshold: 0.85
+      similarityThreshold: 0.85,
+      allowDuplicate: true
     }).matches >= MIN_NAME_MATCHES;
   }
 

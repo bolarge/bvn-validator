@@ -5,7 +5,8 @@
 const AccountValidationCache = require('../models/AccountValidationCache'),
   CPoSAccountValidation = require('../services/CPoSClient'),
   Utils = require('../services/Utils'),
-  objectHash = require('object-hash');
+  objectHash = require('object-hash'),
+  _ = require('lodash');
 
 const BVNService = require("../services/BVNService");
 
@@ -40,7 +41,7 @@ const doNameMatch = (request, cachedData) => {
 };
 
 const doBvnMatch = (request, cachedData) => {
-    return _.trim(request.bvn) === _.trim(cachedData.bvn);
+  return _.trim(request.bvn) === _.trim(cachedData.bvn);
 };
 
 const cacheResult = (request, data) => {
@@ -78,7 +79,7 @@ const performAccountValidation = async function (request, forceReload = false) {
       //cache in background
       cacheResult(request, result.data);
       //success or name validation failed
-      if (result.valid || (result.error && result.error === 'NAME_MISMATCH')) {
+      if (result.valid || (result.error && result.error.code === 'NAME_MISMATCH')) {
         return result;
       }
     }
