@@ -2,3 +2,5 @@ node_modules
 *.keystore
 *.bak
 keys/*.key
+dockerenv
+id_rsa
